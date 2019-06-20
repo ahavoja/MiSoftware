@@ -4,15 +4,15 @@ void home(){
 		Serial.println("Lowering hook");
 		posTop=2E9;
 		fastMode();
-		goal0=0;
-		goal1=0;
-		goal2=-20;
+		goal[0]=0;
+		goal[1]=0;
+		goal[2]=-20;
 		homing=2;
 	}
 	else if(homing==2){
 		if(spd[2]<=-20/* || (PINC&8)==0*/){
 			Serial.println("Raising hook");
-			goal2=50;
+			goal[2]=50;
 			homing=3;
 		}
 	}
@@ -33,9 +33,9 @@ void home(){
 		posMin=-2E9;
 		homing=5;
 		homeSlew=1;
-		goal0=126;
+		goal[0]=126;
 		homeTrolley=1;
-		goal1=-126;
+		goal[1]=-126;
 	}
 	else if(homing==5){
 		if(homeTrolley==2){
@@ -46,19 +46,19 @@ void home(){
 			sei();
 			posMax=2E9;
 			delay(50);
-			goal1=126; // change direction
+			goal[1]=126; // change direction
 			homeTrolley=3;
 		}
 		else if(homeTrolley==4){
 			Serial.println("Trolley homed");
-			goal1=0;
+			goal[1]=0;
 			cli();
 			posMax=pos[1]-20;
 			sei();
 			homeTrolley=0;
 		}
 		if(homeSlew==3){
-			goal0=0;
+			goal[0]=0;
 			Serial.println("Slew homed");
 			homeSlew=0;
 		}

@@ -2,16 +2,60 @@ void loop() {
 	const unsigned long now=millis();
 	static unsigned long timeReceived=0, timeSerial=0;
 	
-	// receive commands from PC through Ethernet
 	if(ethernetConnected){
-		EthernetClient client = server.available();
-		if(client.available()){
-			Serial.print("Received ");
+
+		// receive commands from PC through Ethernet
+		client = server.available();
+		if(client.available()>=3){ // 3 speed commands received
+			//Serial.print("Received");
 			timeReceived=now;
-			while(client.available()){
-				Serial.write(client.read());
+			for(byte zoo=0; zoo<3; zoo++){
+				const char buff=client.read();
+				if(homing==0) goal[zoo]=buff; // set new speed goals for motors
+				//Serial.write(' ');
+				//Serial.print(goal[zoo],DEC);
 			}
-			Serial.println();
+			//Serial.println();
+		}
+
+		// receive settings
+		else if(client.available()>=1){
+			const char wax=client.read();
+			Serial.print("Settings ");
+			Serial.println(wax,BIN);
+			if(wax & 4){
+				stopMotors();
+			}else{
+				if(wax & 2) homing=1;
+				else{
+					if(wax & 1) silentMode();
+					else fastMode();
+				}
+			}
+		}
+
+		// Send motor positions to PC
+		clientLoc = serverLoc.available();
+		if(clientLoc.available()){
+			while(clientLoc.available()) clientLoc.read(); // empty buffer
+			//Serial.println("Transmitting");
+			long positron[3];
+			for(byte i=0; i<3; i++){ // copy motor positions to buffer
+				cli();
+				positron[i]=pos[i];
+				sei();
+			}
+			//float beef = positron[0]/200.0/(103/121+26)/53*9; // gear ratio for slew
+			//float beef = positron[0]*3.162075E-5; // slew in revolutions
+			float beef = positron[0]*1.9867909E-4; // slew in radians
+			message = String(beef,3);
+			message += ';';
+			beef = 668-positron[1]*0.2; // trolley position from tower centerline mm
+			message += String(beef,0);
+			message += ';';
+			beef = positron[2]*0.337075; // hook position from trolley bottom mm
+			message += String(beef,0);
+			clientLoc.print(message);
 		}
 	}
 
@@ -21,8 +65,8 @@ void loop() {
 		then=now;
 
 		// slew
-		if(spd[0]<goal0) spd[0]++; else
-		if(spd[0]>goal0) spd[0]--;
+		if(spd[0]<goal[0]) spd[0]++; else
+		if(spd[0]>goal[0]) spd[0]--;
 		static bool newDir0=0;
 		if(spd[0]>0) newDir0=1; else
 		if(spd[0]<0) newDir0=0;
@@ -33,8 +77,8 @@ void loop() {
 		setSpeed(0,spd[0]==0?0:fast[0]/abs(spd[0]));
 
 		// trolley
-		if(spd[1]<goal1) spd[1]++; else
-		if(spd[1]>goal1) spd[1]--;
+		if(spd[1]<goal[1]) spd[1]++; else
+		if(spd[1]>goal[1]) spd[1]--;
 		cli();
 		const long pos_=pos[1];
 		sei();
@@ -49,8 +93,8 @@ void loop() {
 		setSpeed(1,spd[1]==0?0:fast[1]/abs(spd[1]));
 
 		// hook
-		if(spd[2]<goal2) spd[2]++; else
-		if(spd[2]>goal2) spd[2]--;
+		if(spd[2]<goal[2]) spd[2]++; else
+		if(spd[2]>goal[2]) spd[2]--;
 		cli();
 		const long posHook=pos[2];
 		sei();
@@ -64,7 +108,7 @@ void loop() {
 		}
 		if(newDir2==0 && (PINC&8)==0){ // slack detection
 			spd[2]=0;
-			goal2=0;
+			goal[2]=0;
 			setSpeed(2,0);
 		}
 		else setSpeed(2,spd[2]==0?0:fast[2]/abs(spd[2]));
@@ -75,13 +119,13 @@ void loop() {
 		timeReceived = now;
 		timeSerial = now;
 		static byte job=255;
-		char wax=Serial.read();
+		const char wax=Serial.read();
 		if(wax==127 && homing==0) job=0; // speed packet start character is 127
 		else if(wax==-127) job=4; // -127 indicates that next byte will be settings
 		else if(job<3){ // or else it must be a speed command -126 to 126
-			if(job==0) goal0=wax; else
-			if(job==1) goal1=wax; else
-			if(job==2) goal2=wax;
+			if(job==0) goal[0]=wax; else
+			if(job==1) goal[1]=wax; else
+			if(job==2) goal[2]=wax;
 			++job;
 		}
 		else if(job==4){ // decode settings byte
@@ -108,7 +152,7 @@ void loop() {
 	}
 
 	if(now - timeReceived > 1000){
-		goal0=0; goal1=0; goal2=0;
+		goal[0]=0; goal[1]=0; goal[2]=0;
 	}
 	
 	if(homing>0) home();

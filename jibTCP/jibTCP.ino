@@ -2,6 +2,7 @@
 // or serial port and control 3 steppers.
 // This works at least with atmega 328p microcontroller (Arduino Uno or Nano)
 /* todo:
+ * add homing and other buttons to TCP receiving
  * smooth transition from slow mode to fast mode
  * user shouldnt be able to switch to silent mode during homing
  * real acceleration setting instead of acl
@@ -17,7 +18,7 @@
 */
 
 // a motor can never spin too fast, right?
-#pragma GCC optimize ("-O1") // https://www.instructables.com/id/Arduino-IDE-16x-compiler-optimisations-faster-code/
+#pragma GCC optimize ("-O2") // https://www.instructables.com/id/Arduino-IDE-16x-compiler-optimisations-faster-code/
 
 // TMC2130 pin connections
 	/* You need to connect the SPI pins as follows for programming the TMC2130. If you have several TMC2130, they all must use these same pins.
@@ -52,7 +53,10 @@ Adafruit_NeoPixel led(23, A4, NEO_GRB + NEO_KHZ800); // led count, led pin
 #include <EEPROM.h>
 
 #include <Ethernet.h>
-EthernetServer server(80); // port
+EthernetServer server(10000); // port for controlling motor movement
+EthernetServer serverLoc(10001); // port for reading motor positions
+EthernetClient client;
+EthernetClient clientLoc;
 
 // global variables
 volatile unsigned long
@@ -66,6 +70,6 @@ volatile long
 volatile byte homing=0, homeSlew=0, homeTrolley=0;
 unsigned long fast[3]; // motor max speeds
 unsigned long acl=10; // acceleration setting
-char goal0=0, goal1=0, goal2=0;
-char spd[3]={0,0,0};
+char spd[3]={0,0,0}, goal[3]={0,0,0};
 bool ethernetConnected=0, serialActive=0;
+String message;
