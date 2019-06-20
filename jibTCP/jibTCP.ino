@@ -1,8 +1,6 @@
-// This code is supposed to read commands from Ethernet TCP through W5500
-// or serial port and control 3 steppers.
-// This works at least with atmega 328p microcontroller (Arduino Uno or Nano)
+// This code reads commands from serial port (USB wire) or W5500 ethernet shield and controls 3 stepper motors via TMC2130 drivers.
+// This code runs on atmega 328p microcontroller (Arduino Uno or Nano)
 /* todo:
- * add homing and other buttons to TCP receiving
  * smooth transition from slow mode to fast mode
  * user shouldnt be able to switch to silent mode during homing
  * real acceleration setting instead of acl
@@ -16,9 +14,6 @@
 	 * use stallGuard value to limit speed to prevent motors stalling
  * ISR is not sending step pulses perfectly evenly when spinning many motors at the same time
 */
-
-// a motor can never spin too fast, right?
-#pragma GCC optimize ("-O2") // https://www.instructables.com/id/Arduino-IDE-16x-compiler-optimisations-faster-code/
 
 // TMC2130 pin connections
 	/* You need to connect the SPI pins as follows for programming the TMC2130. If you have several TMC2130, they all must use these same pins.
@@ -38,6 +33,9 @@
 		VIO --> 5V
 		VM --> motor power supply (5 - 45 V) and > 100 µF capacitor */
 
+// a motor can never spin too fast, right?
+#pragma GCC optimize ("-O2") // https://www.instructables.com/id/Arduino-IDE-16x-compiler-optimisations-faster-code/
+
 // This code uses libraries. These can be easily installed through Arduino IDE library manager by pressing CTRL + SHIFT + I
 #include <TMC2130Stepper.h> // https://github.com/teemuatlut/TMC2130Stepper
 
@@ -50,7 +48,7 @@ TMC2130Stepper hook = TMC2130Stepper(A2);
 #include <Adafruit_NeoPixel.h>
 Adafruit_NeoPixel led(23, A4, NEO_GRB + NEO_KHZ800); // led count, led pin
 
-#include <EEPROM.h>
+#include <EEPROM.h> // for storing unique IP address for each arduino
 
 #include <Ethernet.h>
 EthernetServer server(10000); // port for controlling motor movement

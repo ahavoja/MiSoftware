@@ -1,4 +1,4 @@
-# Hello, Joel here. Before running this code, connect one or more gamepads to the computer. This code detects which of the pads are Spartan Gear Oplon and which are Sony DualShock4 and reads 3 joysticks from each pad. The code then notices if a joystick on any of the connected pads is being turned by someone and sends that joystick position to arduino through serial (USB wire). This keeps repeating forever.
+# Hello, Joel here. Before running this code, connect one or more gamepads to the computer. This code reads 3 joysticks from each pad and notices if a joystick on any of the connected pads is being turned by someone and sends that joystick position to arduino through serial (USB wire). Also keyboard control works with arrow keys, A, Z, F and S keys.
 
 # libraries you may need to install with pip
 import pygame # https://www.pygame.org/docs/ref/joystick.html I took this code from here.

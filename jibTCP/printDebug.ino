@@ -60,17 +60,17 @@ void printDebug()
 		Serial.print(",");
 		Serial.print(stallGuardHook, DEC);
 		Serial.print(",  ");
-		if(PINB & 1==0) Serial.print("trolley stalled, ");
-		if(PINB & 2==0) Serial.print("hook stalled, ");
+		if(PINB & 1==0) Serial.print(F("trolley stalled, "));
+		if(PINB & 2==0) Serial.print(F("hook stalled, "));
 		Serial.print(Vin,1);
 		Serial.print(", ");
 		Serial.print(homingOld,DEC);
 		Serial.print(", ");
 		Serial.print(analogRead(A6));
 		if(rat>0){
-			Serial.print(", timer1 overflow ");
+			Serial.print(F(", timer1 overflow "));
 			Serial.print(rat);
-			Serial.print(" times");
+			Serial.print(F(" times"));
 			rat=0;
 		}
 		Serial.println();
@@ -79,12 +79,12 @@ void printDebug()
 	static bool enabled=0;
 	if(enabled){
 		if(Vin<5){
-			Serial.println("Drivers off");
+			Serial.println(F("Drivers off"));
 			enabled=0;
 		}
 	}
 	else if(Vin>6){ // auto re-enable drivers after power off
-		Serial.println("Drivers on");
+		Serial.println(F("Drivers on"));
 		settings(); // this function blocks for half a second
 		enabled=1;
 	}

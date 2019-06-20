@@ -205,7 +205,7 @@ void setup() {
 
 	// Ethernet stuff below
 	Ethernet.init(10); // Ethernet shield CS pin
-	//EEPROM.update(0,1);
+	//EEPROM.update(0,171); // you can use this line to update unique IP address
 	const byte myIP=EEPROM.read(0);
 	if(myIP==171) led.updateLength(47); // because jib number one has more leds
 	const byte mac[] = {0xA3, 0xAD, 0xBE, 0x16, 0x47, myIP};
