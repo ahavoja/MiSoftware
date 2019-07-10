@@ -23,12 +23,12 @@ void loop() {
 			const char wax=client.read();
 			Serial.print("Settings ");
 			Serial.println(wax,BIN);
-			if(wax & 4){
+			if(wax == 4){
 				stopMotors();
 			}else{
-				if(wax & 2) homing=1;
+				if(wax == 2) homing=1;
 				else{
-					if(wax & 1) silentMode();
+					if(wax == 1) silentMode();
 					else fastMode();
 				}
 			}
@@ -55,7 +55,7 @@ void loop() {
 			message += ';';
 			beef = positron[2]*0.337075; // hook position from trolley bottom mm
 			message += String(beef,0);
-			clientLoc.print(message);
+			clientLoc.print(message+"\n");
 		}
 	}
 
