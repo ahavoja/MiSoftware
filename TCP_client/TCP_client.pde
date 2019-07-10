@@ -14,8 +14,8 @@ void setup() {
   size(200, 200);
   background(50);
   fill(200);
-  c = new Client(this,"192.168.0.172", 10000); // crane IP and port for control
-  cr = new Client(this,"192.168.0.172", 10001); // port to read motor positions
+  c = new Client(this,"192.168.0.174", 10000); // crane IP and port for control
+  cr = new Client(this,"192.168.0.174", 10001); // port to read motor positions
 }
 
 String data;
@@ -44,9 +44,9 @@ void draw() {
 // keyboard control for crane
 void keyPressed() {
   if (keyCode == ' '){ // emergency stop
-    settings |= 4;
+    settings = 4;
     c.write(settings);
-    settings &= ~4;
+    settings = 0;
   }
   else{ // movement control
     if (keyCode == UP) trolley=-126;
@@ -63,16 +63,16 @@ void keyReleased() { // stop movement
   if (keyCode == LEFT || keyCode == RIGHT) slew=0;
   if (keyCode == 'A' || keyCode == 'Z') hook=0;
   if (keyCode == 'H') {
-    settings |= 2;
+    settings = 2;
     c.write(settings);
-    settings &= ~2;
+    settings = 0;
   }
   else if (keyCode == 'S') {
-    settings |= 1;
+    settings = 1;
     c.write(settings);
   }
   else if (keyCode == 'F') {
-    settings &= ~1;
+    settings = 0;
     c.write(settings);
   }
 }
