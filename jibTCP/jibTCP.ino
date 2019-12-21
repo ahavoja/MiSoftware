@@ -1,6 +1,8 @@
 // This code reads commands from serial port (USB wire) or W5500 ethernet shield and controls 3 stepper motors via TMC2130 drivers.
 // This code runs on atmega 328p microcontroller (Arduino Uno or Nano)
 /* todo:
+ * adjustable acceleration
+ * 16 bit speed commands
  * smooth transition from slow mode to fast mode
  * user shouldnt be able to switch to silent mode during homing
  * real acceleration setting instead of acl
