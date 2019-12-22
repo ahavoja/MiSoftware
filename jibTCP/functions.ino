@@ -75,15 +75,16 @@ void fastMode(){
 }
 
 // changes motor speed
-// parameters: motor (0 or 1 or 2), cpu cycles between 2 steps (less is faster, but 0 stops motor)
-void setSpeed(byte motor, unsigned long newKid){
-	if (newKid==0){
+// parameter: motor (0 or 1 or 2)
+void setSpeed(byte motor){
+	if (spd[motor]==0){
 		cli();
 		motOn[motor]=0; // dont step the motor
 		kid[motor]=0xFFFF00; // longest possible step period
 		sei();
 	}
 	else{
+		unsigned long newKid=fast[motor]/abs(spd[motor]); // how many CPU cycles to wait between steps
 		if(newKid>0xFFFF00) newKid=0xFFFF00; // why would we even try to step slower than this
 		cli();
 		motOn[motor]=1;
@@ -127,7 +128,7 @@ inline void fox(unsigned long cycles){
 void stopMotors(){
 	goal[0]=0; goal[1]=0; goal[2]=0;
 	spd[0]=0; spd[1]=0; spd[2]=0;
-	setSpeed(0,0); setSpeed(1,0); setSpeed(2,0);
+	setSpeed(0); setSpeed(1); setSpeed(2);
 	homing=0; homeTrolley=0; homeSlew=0;
 	posMax=2E9; posMin=-2E9; posTop=2E9;
 	Serial.println(F("Stop motors"));

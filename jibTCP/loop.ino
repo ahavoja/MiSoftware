@@ -74,7 +74,7 @@ void loop() {
 			slew.shaft_dir(newDir0);
 			dir[0]=newDir0;
 		}
-		setSpeed(0,spd[0]==0?0:fast[0]/abs(spd[0]));
+		setSpeed(0);
 
 		// trolley
 		if(spd[1]<goal[1]) spd[1]++; else
@@ -90,7 +90,7 @@ void loop() {
 			trolley.shaft_dir(newDir1);
 			dir[1]=newDir1;
 		}
-		setSpeed(1,spd[1]==0?0:fast[1]/abs(spd[1]));
+		setSpeed(1);
 
 		// hook
 		if(spd[2]<goal[2]) spd[2]++; else
@@ -109,9 +109,8 @@ void loop() {
 		if(newDir2==0 && (PINC&8)==0){ // slack detection
 			spd[2]=0;
 			goal[2]=0;
-			setSpeed(2,0);
 		}
-		else setSpeed(2,spd[2]==0?0:fast[2]/abs(spd[2]));
+		setSpeed(2);
 	}
 
 	// receive commands from PC through USB
