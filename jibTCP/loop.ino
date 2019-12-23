@@ -113,6 +113,23 @@ void loop() {
 		setSpeed(2);
 	}
 
+
+	// acceleration 2
+	/*static unsigned long microtime=micros();
+	byte accel[3]={10,10,10};
+	// slew
+	if(spd[0]<goal[0]) spd[0]+=(nyt-viime)*accel[0]; else
+	if(spd[0]>goal[0]) spd[0]--;
+	static bool newDir0=0;
+	if(spd[0]>0) newDir0=1; else
+	if(spd[0]<0) newDir0=0;
+	if (newDir0!=dir[0]){
+		slew.shaft_dir(newDir0);
+		dir[0]=newDir0;
+	}
+	setSpeed(0);*/
+
+
 	// receive commands from PC through USB
 	if(Serial.available()){
 		timeReceived = now;
