@@ -59,7 +59,6 @@ void silentMode(){
 	fast[0]=2000000;
 	fast[1]=8000000;
 	fast[2]=15000000;
-	acl=2; // todo switch from this hack to a true acceleration setting
 }
 
 void fastMode(){
@@ -71,7 +70,26 @@ void fastMode(){
 	fast[0]=400000;
 	fast[1]=2000000;
 	fast[2]=2000000;
-	acl=10;
+}
+
+// calculates new speed for motor and limits its acceleration
+// call this function in every iteration of loop(), once for each motor
+// parameter: motor (0 or 1 or 2)
+void calcSpeed(byte motor){
+	static unsigned long viime[3]={now,now,now};
+	const byte tuokio=now-viime[motor];
+	const byte increment=tuokio*acceleration[motor];
+	if(increment>0){
+		viime[motor]=now;
+		if(spd[motor]<goal[motor]){
+			if(increment<goal[motor]-spd[motor]) spd[motor]+=increment;
+			else spd[motor]=goal[motor];
+		}
+		else if(spd[motor]>goal[motor]){
+			if(increment<spd[motor]-goal[motor]) spd[motor]-=increment;
+			else spd[motor]=goal[motor];
+		}
+	}
 }
 
 // changes motor speed
@@ -206,11 +224,11 @@ void setup() {
 
 	// Ethernet stuff below
 	Ethernet.init(10); // Ethernet shield CS pin
-	//EEPROM.update(0,171); // you can use this line to update unique IP address
+	//EEPROM.update(0,3); // you can use this line to update unique IP address
 	const byte myIP=EEPROM.read(0);
 	if(myIP==171) led.updateLength(47); // because jib number one has more leds
-	const byte mac[] = {0xA3, 0xAD, 0xBE, 0x16, 0x47, myIP};
-	IPAddress ip(192,168,0,myIP);
+	const byte mac[] = {0xA3, 0xAD, 0xBE, 0x16, 0x47, myIP}; // a3:ad:be:16:47:ab
+	IPAddress ip(192,168,EEPROM.read(1),myIP); // 192.168.0.171
 	Ethernet.begin(mac, ip);
 	if(Ethernet.hardwareStatus()==EthernetNoHardware) Serial.println(F("Ethernet shield not found. :("));
 	else if(Ethernet.linkStatus()==LinkOFF) Serial.println(F("Ethernet cable not connected. :("));
