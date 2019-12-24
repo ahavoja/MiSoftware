@@ -127,7 +127,7 @@ while done==False:
 
 		for j in range( buttons ):
 			button = pad.get_button( j )
-			if button is 1:
+			if button == 1:
 				textPrint.print(screen, "Button {:>2}".format(j) )
 		textPrint.unindent()
 		textPrint.unindent()
