@@ -1,9 +1,7 @@
 void loop() {
 	now=millis();
 	
-	// accelerate slowly
-	
-	// slew
+	// slew acceleration
 	calcSpeed(0);
 	static bool newDir0=0;
 	if(spd[0]>0) newDir0=1; else
@@ -14,12 +12,12 @@ void loop() {
 	}
 	setSpeed(0);
 
-	// trolley
+	// trolley acceleration
 	calcSpeed(1);
 	cli();
-	const long pos_=pos[1];
+	const long posTrolley=pos[1];
 	sei();
-	if(pos_>=posMax && spd[1]>0 || pos_<=posMin && spd[1]<0) spd[1]=0;
+	if(posTrolley>=posMax && spd[1]>0 || posTrolley<=posMin && spd[1]<0) spd[1]=0;
 	static bool newDir1=0;
 	if(spd[1]>0) newDir1=1; else
 	if(spd[1]<0) newDir1=0;
@@ -29,7 +27,7 @@ void loop() {
 	}
 	setSpeed(1);
 
-	// hook
+	// hook acceleration
 	calcSpeed(2);
 	cli();
 	const long posHook=pos[2];
@@ -47,7 +45,6 @@ void loop() {
 		goal[2]=0;
 	}
 	setSpeed(2);
-
 
 	// Ethernet stuff
 	static unsigned long timeReceived=0;

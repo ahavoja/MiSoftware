@@ -62,7 +62,7 @@ void silentMode(){
 }
 
 void fastMode(){
-	Serial.println("Fast mode");
+	Serial.println(F("Fast mode"));
 	slew.stealth_max_speed(10000);
 	trolley.stealth_max_speed(10000);
 	hook.stealth_max_speed(10000);
@@ -100,8 +100,7 @@ void setSpeed(byte motor){
 		motOn[motor]=0; // dont step the motor
 		kid[motor]=0xFFFF00; // longest possible step period
 		sei();
-	}
-	else{
+	}else{
 		unsigned long newKid=fast[motor]/abs(spd[motor]); // how many CPU cycles to wait between steps
 		if(newKid>0xFFFF00) newKid=0xFFFF00; // why would we even try to step slower than this
 		cli();
