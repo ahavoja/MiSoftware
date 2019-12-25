@@ -1,8 +1,7 @@
 // This code reads commands from serial port (USB wire) or W5500 ethernet shield and controls 3 stepper motors via TMC2130 drivers.
 // This code runs on atmega 328p microcontroller (Arduino Uno or Nano)
 /* todo:
- * 16 bit speed commands
- * smooth transition from slow mode to fast mode
+ * receive 16 bit speed commands
  * user shouldnt be able to switch to silent mode during homing
  * remotely adjustable acceleration settings in EEPROM
  * jerk limit?
@@ -67,9 +66,8 @@ volatile long
 	pos[3]={0,0,0}, // motor step positions
 	posMax=2E9, posMin=-2E9, posTop=2E9;
 volatile byte homing=0, homeSlew=0, homeTrolley=0;
-unsigned long fast[3]; // motor max speeds
-char spd[3]={0,0,0}, goal[3]={0,0,0};
+int spd[3]={0,0,0}, goal[3]={0,0,0};
 bool ethernetConnected=0, serialActive=0;
 String message;
 unsigned long now; // current time in loop()
-float acceleration[3]={0.01,0.02,0.03}; // slew, trolley, hook acceleration limits
+float acceleration[3]={0.5,0.5,0.5}; // slew, trolley, hook acceleration limits

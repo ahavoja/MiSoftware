@@ -6,11 +6,11 @@ void home(){
 		fastMode();
 		goal[0]=0;
 		goal[1]=0;
-		goal[2]=-20;
+		goal[2]=-20; // todo adjust
 		homing=2;
 	}
 	else if(homing==2){
-		if(spd[2]<=-20/* || (PINC&8)==0*/){
+		if(spd[2]<=-20/* || (PINC&8)==0*/){ // todo change from goal speed to goal distance
 			Serial.println(F("Raising hook"));
 			goal[2]=50;
 			homing=3;

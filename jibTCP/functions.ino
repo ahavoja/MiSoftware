@@ -56,9 +56,6 @@ void silentMode(){
 	trolley.stealth_max_speed(10);
 	hook.stealth_max_speed(10);
 	hook.coolstep_min_speed(0);
-	fast[0]=2000000;
-	fast[1]=8000000;
-	fast[2]=15000000;
 }
 
 void fastMode(){
@@ -67,9 +64,6 @@ void fastMode(){
 	trolley.stealth_max_speed(10000);
 	hook.stealth_max_speed(10000);
 	hook.coolstep_min_speed(400);
-	fast[0]=400000;
-	fast[1]=2000000;
-	fast[2]=2000000;
 }
 
 // calculates new speed for motor and limits its acceleration
@@ -101,7 +95,7 @@ void setSpeed(byte motor){
 		kid[motor]=0xFFFF00; // longest possible step period
 		sei();
 	}else{
-		unsigned long newKid=fast[motor]/abs(spd[motor]); // how many CPU cycles to wait between steps
+		unsigned long newKid=16000000UL/abs(spd[motor]); // how many CPU cycles to wait between steps
 		if(newKid>0xFFFF00) newKid=0xFFFF00; // why would we even try to step slower than this
 		cli();
 		motOn[motor]=1;
