@@ -27,7 +27,7 @@ WHITE=(255,255,255)
 class TextPrint:
 	def __init__(self):
 		self.reset()
-		self.font = pygame.font.SysFont('Calibri', 17, bold=False, italic=False)
+		self.font = pygame.font.SysFont('Consolas', 18, bold=False, italic=False)
 	def print(self, screen, textString):
 		textBitmap = self.font.render(textString, True, WHITE)
 		screen.blit(textBitmap, [self.x, self.y])
@@ -35,18 +35,16 @@ class TextPrint:
 	def reset(self):
 		self.x = 10
 		self.y = 10
-		self.line_height = 15
+		self.line_height = 20
 	def indent(self):
 		self.x += 20
 	def unindent(self):
 		self.x -= 20
 
 pygame.init()
-screen = pygame.display.set_mode([300, 700]) # screen size [width,height]
-pygame.display.set_caption("pad PdP MiCrane")
-done = False #Loop until the user clicks the close button.
+screen = pygame.display.set_mode([300, 300]) # screen size [width,height]
+pygame.display.set_caption("keyboard-USB")
 clock = pygame.time.Clock() # Used to manage how fast the screen updates
-pygame.joystick.init() # Initialize the joysticks
 textPrint = TextPrint() # Get ready to print
 
 ser=None
@@ -59,6 +57,7 @@ trolleyOld=0
 hookOld=0
 
 # -------- Main Program Loop -----------
+done = False #Loop until the user clicks the close button.
 while done==False:
 
 	# DRAWING STEP
@@ -66,18 +65,11 @@ while done==False:
 	# above this, or they will be erased with this command.
 	screen.fill(BLACK)
 	textPrint.reset()
-
-	# Get count of joysticks
-	joystick_count = pygame.joystick.get_count()
-
-	textPrint.print(screen, "Number of joysticks: {}".format(joystick_count) )
-	textPrint.indent()
 	
 	slew=0
 	trolley=0
 	hook=0
 	send=0
-	stopping=False
 	homing=False
 
 	# EVENT PROCESSING STEP
@@ -91,10 +83,18 @@ while done==False:
 			if event.key == pygame.K_s:
 				wax |= 1
 				send=1
-				
+			if event.key == pygame.K_h:
+				wax |= 2
+				send=1
+
+
 	# keyboard control
-	if stopping == False:
-		keys=pygame.key.get_pressed()
+	keys=pygame.key.get_pressed()
+	if keys[pygame.K_SPACE]:
+		wax |= 4
+		send=1
+	else:
+		wax &= ~4
 		if keys[pygame.K_LEFT]:
 			slew=126
 		elif keys[pygame.K_RIGHT]:
@@ -107,6 +107,9 @@ while done==False:
 			hook=126
 		elif keys[pygame.K_z]:
 			hook=-126
+	
+	textPrint.print(screen,"{} {} {}".format(slew,trolley,hook))
+	textPrint.print(screen,"{:b}".format(2))
 	
 	if ser is None: # auto select arduino COM port
 		if cat is None:

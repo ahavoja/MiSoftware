@@ -118,7 +118,7 @@ void loop() {
 		}
 	}
 
-	// receive commands from PC through USB
+	/*// receive commands from PC through USB
 	static unsigned long timeSerial=0;
 	if(Serial.available()){
 		timeReceived = now;
@@ -145,6 +145,16 @@ void loop() {
 			}
 			++job;
 		}
+	}*/
+
+	static unsigned long timeSerial=0;
+	if(Serial.available()){
+		timeReceived = now;
+		timeSerial = now;
+		static byte job=255;
+		const long wax=Serial.parseInt();
+		goal[0]=wax;
+		while(Serial.available()) Serial.read();
 	}
 
 	// disable larson scanner whenever motors turn
@@ -157,10 +167,10 @@ void loop() {
 		serialOld=serialActive;
 	}
 
-	// stop motors if no speed commands are received
+	/*// stop motors if no speed commands are received
 	if(now - timeReceived > 1000){
 		goal[0]=0; goal[1]=0; goal[2]=0;
-	}
+	}*/
 	
 	if(homing>0) home();
 	
