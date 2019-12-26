@@ -151,11 +151,11 @@ void larsonScanner(){
 	// Draw 5 pixels centered on pos.	setPixelColor() will clip any
 	// pixels off the ends of the strip, we don't need to watch for that.
 	if(serialActive){
-		led.setPixelColor(pos - 2, 0x000010);
-		led.setPixelColor(pos - 1, 0x000080);
-		led.setPixelColor(pos    , 0x0000FF);
-		led.setPixelColor(pos + 1, 0x000080);
-		led.setPixelColor(pos + 2, 0x000010);
+		led.setPixelColor(pos - 2, 0x0000FF);
+		led.setPixelColor(pos - 1, 0x00FFFF);
+		led.setPixelColor(pos    , 0x00FF00);
+		led.setPixelColor(pos + 1, 0xFFFF00);
+		led.setPixelColor(pos + 2, 0xFF0000);
 	}else if(ethernetConnected){
 		led.setPixelColor(pos - 2, 0x001000);
 		led.setPixelColor(pos - 1, 0x008000);
@@ -169,7 +169,7 @@ void larsonScanner(){
 		led.setPixelColor(pos + 1, 0x800000); // Medium red
 		led.setPixelColor(pos + 2, 0x100000); // Dark red
 	}
- 
+	//led.fill(0xFFAA00);
 	led.show();
  
 	// Rather than being sneaky and erasing just the tail pixel,

@@ -55,6 +55,8 @@ wax=0
 slewOld=0
 trolleyOld=0
 hookOld=0
+buffer=bytearray(7)
+struct.pack_into('>B',buffer,0,0b10000000)
 
 # -------- Main Program Loop -----------
 done = False #Loop until the user clicks the close button.
@@ -65,12 +67,11 @@ while done==False:
 	# above this, or they will be erased with this command.
 	screen.fill(BLACK)
 	textPrint.reset()
-	
+
 	slew=0
 	trolley=0
 	hook=0
 	send=0
-	homing=False
 
 	# EVENT PROCESSING STEP
 	for event in pygame.event.get(): # User did something
@@ -86,30 +87,30 @@ while done==False:
 			if event.key == pygame.K_h:
 				wax |= 2
 				send=1
-
+			if event.key == pygame.K_SPACE:
+				wax |= 4
+				send=1
 
 	# keyboard control
 	keys=pygame.key.get_pressed()
-	if keys[pygame.K_SPACE]:
-		wax |= 4
-		send=1
-	else:
-		wax &= ~4
+	if not keys[pygame.K_SPACE]:
 		if keys[pygame.K_LEFT]:
-			slew=126
+			slew=7000 # motor steps per second
 		elif keys[pygame.K_RIGHT]:
-			slew=-126
+			slew=-7000
 		if keys[pygame.K_UP]:
-			trolley=-126
+			trolley=-4000
 		elif keys[pygame.K_DOWN]:
-			trolley=126
+			trolley=4000
 		if keys[pygame.K_a]:
-			hook=126
+			hook=7000
 		elif keys[pygame.K_z]:
-			hook=-126
+			hook=-7000
 	
 	textPrint.print(screen,"{} {} {}".format(slew,trolley,hook))
-	textPrint.print(screen,"{:b}".format(2))
+	struct.pack_into('>BB',buffer,1,(slew&0x3FFF)>>7,slew&0x7F)
+	struct.pack_into('>BB',buffer,3,(trolley&0x3FFF)>>7,trolley&0x7F)
+	struct.pack_into('>BB',buffer,5,(hook&0x3FFF)>>7,hook&0x7F)
 	
 	if ser is None: # auto select arduino COM port
 		if cat is None:
@@ -134,7 +135,7 @@ while done==False:
 	else:
 		if slew!=slewOld or trolley!=trolleyOld or hook!=hookOld or 1:
 			try:
-				ser.write(bytes(struct.pack('>bbbb',127,slew,trolley,hook))) # send 4 bytes to Arduino. The first one, 127, is packet start byte. After that comes three joystick positions as a number between -126 to 126.
+				ser.write(buffer) # send speeds to Arduino
 			except:
 				ser=None
 				cat=None
@@ -143,7 +144,7 @@ while done==False:
 				slewOld=slew
 				trolleyOld=trolley
 				hookOld=hook
-				textPrint.print(screen,"{} {} {}".format(slew,trolley,hook))
+				textPrint.print(screen,"USB on")
 		if send:
 			try:
 				ser.write(bytes(struct.pack('>bb',-127,wax))) # sometimes send also settings
@@ -154,7 +155,8 @@ while done==False:
 			else:
 				send=0
 				wax &= ~2 # stop homing
-				textPrint.print(screen,"{}".format(wax))
+				wax &= ~4 # stop stopping
+				textPrint.print(screen,"Settings {}".format(wax))
 	
 	# ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
 	

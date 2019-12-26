@@ -1,7 +1,7 @@
 // This code reads commands from serial port (USB wire) or W5500 ethernet shield and controls 3 stepper motors via TMC2130 drivers.
 // This code runs on atmega 328p microcontroller (Arduino Uno or Nano)
 /* todo:
- * receive 16 bit speed commands
+ * receive settings
  * user shouldnt be able to switch to silent mode during homing
  * remotely adjustable acceleration settings in EEPROM
  * jerk limit?
@@ -32,6 +32,8 @@
 		GND --> GND
 		VIO --> 5V
 		VM --> motor power supply (5 - 45 V) and > 100 µF capacitor */
+
+// At 24 V input voltage, slewing motor can spin max 7700 steps/second before stalling.
 
 // a motor can never spin too fast, right?
 #pragma GCC optimize ("-O2") // https://www.instructables.com/id/Arduino-IDE-16x-compiler-optimisations-faster-code/
@@ -70,4 +72,4 @@ int spd[3]={0,0,0}, goal[3]={0,0,0};
 bool ethernetConnected=0, serialActive=0;
 String message;
 unsigned long now; // current time in loop()
-float acceleration[3]={0.01,0.5,0.5}; // slew, trolley, hook acceleration limits
+float acceleration[3]={4,10,4}; // slew, trolley, hook acceleration limits

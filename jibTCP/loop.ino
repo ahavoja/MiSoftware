@@ -118,9 +118,9 @@ void loop() {
 		}
 	}
 
-	/*// receive commands from PC through USB
+	// receive commands from PC through USB
 	static unsigned long timeSerial=0;
-	if(Serial.available()){
+	/*if(Serial.available()){
 		timeReceived = now;
 		timeSerial = now;
 		static byte job=255;
@@ -128,8 +128,8 @@ void loop() {
 		if(wax==127 && homing==0) job=0; // speed packet start character is 127
 		else if(wax==-127) job=4; // -127 indicates that next byte will be settings
 		else if(job<3){ // or else it must be a speed command -126 to 126
-			if(job==0) goal[0]=wax; else
-			if(job==1) goal[1]=wax; else
+			if(job==0) goal[0]=wax*8; else
+			if(job==1) goal[1]=wax*2; else
 			if(job==2) goal[2]=wax;
 			++job;
 		}
@@ -147,30 +147,60 @@ void loop() {
 		}
 	}*/
 
-	static unsigned long timeSerial=0;
 	if(Serial.available()){
 		timeReceived = now;
 		timeSerial = now;
 		static byte job=255;
+		static int newSpeed=0;
+		const byte wax=Serial.read();
+		if(wax & 0b10000000) job=0; // start bit
+		else if(job<6){ // or else it must be a speed command
+			if(job==0){
+				newSpeed=wax<<7;
+				if(wax & 0b1000000) newSpeed |= 0b1100000000000000;
+			}else if(job==1){
+				newSpeed |= wax;
+				goal[0]=newSpeed;
+			}else if(job==2){
+				newSpeed=wax<<7;
+				if(wax & 0b1000000) newSpeed |= 0b1100000000000000;
+			}else if(job==3){
+				newSpeed |= wax;
+				goal[1]=newSpeed;
+			}else if(job==4){
+				newSpeed=wax<<7;
+				if(wax & 0b1000000) newSpeed |= 0b1100000000000000;
+			}else if(job==5){
+				newSpeed |= wax;
+				goal[2]=newSpeed;
+			}
+			++job;
+		}
+	}
+
+	/*static unsigned long timeSerial=0;
+	if(Serial.available()){
+		timeReceived = now;
+		timeSerial = now;
 		const long wax=Serial.parseInt();
 		goal[0]=wax;
 		while(Serial.available()) Serial.read();
-	}
+	}*/
 
 	// disable larson scanner whenever motors turn
 	static bool serialOld=serialActive;
 	serialActive = now-timeSerial<1000?1:0;
 	static unsigned long ant=0;
-	if((serialActive>serialOld) || (spd[0]==0 && spd[1]==0 && spd[2]==0 && now-ant>40)){
+	if((serialActive>serialOld) || (spd[0]==0 && spd[1]==0 && spd[2]==0 && now-ant>100)){
 		ant=now;
 		larsonScanner();
 		serialOld=serialActive;
 	}
 
-	/*// stop motors if no speed commands are received
+	// stop motors if no speed commands are received
 	if(now - timeReceived > 1000){
 		goal[0]=0; goal[1]=0; goal[2]=0;
-	}*/
+	}
 	
 	if(homing>0) home();
 	
