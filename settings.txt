@@ -7,4 +7,3 @@ accel_hook=100
 speed_slew=2000
 speed_trol=500
 speed_hook=500
-

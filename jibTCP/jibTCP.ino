@@ -2,8 +2,7 @@
 // This code runs on atmega 328p microcontroller (Arduino Uno or Nano)
 /* todo:
  * adjust and lock homing speeds
- * user shouldnt be able to switch to silent mode during homing
- * remotely adjustable acceleration settings in EEPROM
+ * receive commands through TCP
  * jerk limit?
  * make trolley slow down instead of instantly stopping before edges to limit sway
  * adjust sg_stall_value based on input voltage

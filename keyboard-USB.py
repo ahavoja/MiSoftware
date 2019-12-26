@@ -1,4 +1,4 @@
-# Hello, Joel here. With this code you can control one crane with your computer's keyboard through serial (USB wire). Use arrow keys, A, Z, F and S keys.
+# Hello, Joel here. With this code you can control one crane with your computer's keyboard through serial (USB wire). Use arrow keys, and A, Z, L, H, S, U keys.
 
 # libraries you may need to install with pip
 import pygame # https://www.pygame.org/docs/ref/joystick.html I took this code from here.
@@ -88,7 +88,7 @@ def readSettings():
 			f.write('#Speed in units of steps/s. Range 0 to 8000.\n')
 			f.write('speed_slew=2000\n')
 			f.write('speed_trol=500\n')
-			f.write('speed_hook=500\n\n')
+			f.write('speed_hook=500')
 			f.close()
 			print('settings.txt file created.')
 	try:
