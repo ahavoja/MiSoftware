@@ -1,16 +1,17 @@
 // homing function
 void home(){
 	if(homing==1){ // start homing
+		fastMode();
 		Serial.println(F("Lowering hook"));
 		posTop=2E9;
-		fastMode();
 		goal[0]=0;
 		goal[1]=0;
-		goal[2]=-20; // todo adjust
+		goal[2]=-20;
+		pos[2]=0;
 		homing=2;
 	}
 	else if(homing==2){
-		if(spd[2]<=-20/* || (PINC&8)==0*/){ // todo change from goal speed to goal distance
+		if(pos[2]<=-100 || (PINC&8)==0){
 			Serial.println(F("Raising hook"));
 			goal[2]=50;
 			homing=3;

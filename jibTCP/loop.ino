@@ -147,7 +147,7 @@ void loop() {
 		}
 	}*/
 
-/*Start bit structure
+/*Start bit structure:l
 *1  always 1 in start bit
 *0  for speed command or 1 for acceleration setting
 *1  usually 1, but 0 for emergency stop
@@ -162,11 +162,21 @@ void loop() {
 		static byte job=255;
 		static int newSpeed=0;
 		const byte wax=Serial.read();
-		if(wax >> 7 == 1){ // start bit
-			if(wax & 0b00100000){ // no emergency stop
-				if(wax >> 6 == 0b10) job=0; // speed command
+		if(wax & 0b10000000){ // start bit
+			if(wax & 0b100000){ // no emergency stop
+				if(homing==0){ // dont start homing again if we are already homing
+					if(wax & 0b10000) homing=1;
+					else if((wax & 0b1000000) == 0) job=0; // speed command
+				}
 			}else stopMotors(); // emergency stop
-			if(wax & 0b01000000) job=7; // acceleration setting
+			if(wax & 0b1000000) job=7; // acceleration setting
+			if(homing==0){
+				if(wax & 0b1000){
+					if(silent==0) silentMode();
+				}else{
+					if(silent==1) fastMode();
+				}
+			}
 			if(wax & 0b100) light=1;
 			else light=0;
 		}

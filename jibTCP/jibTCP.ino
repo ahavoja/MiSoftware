@@ -37,7 +37,7 @@
 // At 24 V input voltage, slewing motor can spin max 7700 steps/second before stalling.
 
 // a motor can never spin too fast, right?
-#pragma GCC optimize ("-O2") // https://www.instructables.com/id/Arduino-IDE-16x-compiler-optimisations-faster-code/
+//#pragma GCC optimize ("-O2") // https://www.instructables.com/id/Arduino-IDE-16x-compiler-optimisations-faster-code/
 
 // This code uses libraries. These can be easily installed through Arduino IDE library manager by pressing CTRL + SHIFT + I
 #include <TMC2130Stepper.h> // https://github.com/teemuatlut/TMC2130Stepper
@@ -70,7 +70,7 @@ volatile long
 	posMax=2E9, posMin=-2E9, posTop=2E9;
 volatile byte homing=0, homeSlew=0, homeTrolley=0;
 int spd[3]={0,0,0}, goal[3]={0,0,0};
-bool ethernetConnected=0, serialActive=0, light=0;
+bool ethernetConnected=0, serialActive=0, light=0, silent;
 String message;
 unsigned long now; // current time in loop()
-float acceleration[3]={4,10,4}; // slew, trolley, hook acceleration limits
+float acceleration[3]={4,1,0.1}; // slew, trolley, hook acceleration limits

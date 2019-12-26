@@ -78,14 +78,12 @@ while done==False:
 		if event.type == pygame.QUIT: # If user clicked close
 			done=True # Flag that we are done so we exit this loop
 		if event.type == pygame.KEYDOWN:
-			if event.key == pygame.K_f:
-				pass
 			if event.key == pygame.K_s:
-				pass
+				settings ^= 0b1000
 			if event.key == pygame.K_h:
-				pass
+				settings |= 0b10000 # home
 			if event.key == pygame.K_SPACE:
-				settings &= ~0b00100000 # stop
+				settings &= ~0b100000 # stop
 			if event.key == pygame.K_l:
 				settings ^= 0b100 # lights on/off
 
@@ -143,7 +141,8 @@ while done==False:
 				slewOld=slew
 				trolleyOld=trolley
 				hookOld=hook
-				settings |= 0b00100000 # stop stopping
+				settings |= 0b100000 # stop stopping
+				settings &= ~0b10000 # stop homing
 				textPrint.print(screen,"USB on")
 		if send:
 			try:

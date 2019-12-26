@@ -28,7 +28,6 @@ void settings(){ // this function changes some settings of TMC2130
 	trolley.interpolate(1);
 	trolley.double_edge_step(1);
 	trolley.chopper_mode(0);
-	trolley.coolstep_min_speed(200);
 	trolley.diag1_stall(1);
 	trolley.sg_stall_value(15);
 
@@ -51,18 +50,22 @@ void settings(){ // this function changes some settings of TMC2130
 }
 
 void silentMode(){
+	silent=1;
 	Serial.println(F("Silent mode"));
-	slew.stealth_max_speed(10); // switch stealthChop off if motor spins fast enough (meaning if time between two steps is less than this)
-	trolley.stealth_max_speed(10);
+	slew.stealth_max_speed(30); // switch stealthChop off if motor spins fast enough (meaning if time between two steps is less than this)
+	trolley.stealth_max_speed(10); // todo find how small this can be
 	hook.stealth_max_speed(10);
+	trolley.coolstep_min_speed(0); // set to zero so that it can run silently at higher speeds too
 	hook.coolstep_min_speed(0);
 }
 
 void fastMode(){
+	silent=0;
 	Serial.println(F("Fast mode"));
 	slew.stealth_max_speed(10000);
 	trolley.stealth_max_speed(10000);
 	hook.stealth_max_speed(10000);
+	trolley.coolstep_min_speed(200); // disable stallGuard when going too slow for it to work reliably
 	hook.coolstep_min_speed(400);
 }
 
