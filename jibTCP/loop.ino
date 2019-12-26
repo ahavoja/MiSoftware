@@ -118,36 +118,7 @@ void loop() {
 		}
 	}
 
-	// receive commands from PC through USB
-	static unsigned long timeSerial=0;
-	/*if(Serial.available()){
-		timeReceived = now;
-		timeSerial = now;
-		static byte job=255;
-		const char wax=Serial.read();
-		if(wax==127 && homing==0) job=0; // speed packet start character is 127
-		else if(wax==-127) job=4; // -127 indicates that next byte will be settings
-		else if(job<3){ // or else it must be a speed command -126 to 126
-			if(job==0) goal[0]=wax*8; else
-			if(job==1) goal[1]=wax*2; else
-			if(job==2) goal[2]=wax;
-			++job;
-		}
-		else if(job==4){ // decode settings byte
-			if(wax & 4){
-				stopMotors();
-			}else{
-				if(wax & 2) homing=1;
-				else{
-					if(wax & 1) silentMode();
-					else fastMode();
-				}
-			}
-			++job;
-		}
-	}*/
-
-/*Start bit structure:l
+/*Start bit structure:
 *1  always 1 in start bit
 *0  for speed command or 1 for acceleration setting
 *1  usually 1, but 0 for emergency stop
@@ -156,13 +127,15 @@ void loop() {
 *0  1 for illumination
 */
 
+	// receive commands from PC through USB
+	static unsigned long timeSerial=0;
 	if(Serial.available()){
 		timeReceived = now;
 		timeSerial = now;
 		static byte job=255;
 		static int newSpeed=0;
 		const byte wax=Serial.read();
-		if(wax & 0b10000000){ // start bit
+		if(wax & 0b10000000){ // start byte
 			if(wax & 0b100000){ // no emergency stop
 				if(homing==0){ // dont start homing again if we are already homing
 					if(wax & 0b10000) homing=1;
@@ -202,19 +175,26 @@ void loop() {
 			}
 			++job;
 		}
-		else if(job>6 && job<100){ // acceleration setting
-			Serial.println("accel");
+		else if(job>6 && job<13){ // acceleration setting
+			if(job==7) newSpeed=wax<<7;
+			else if(job==8){
+				newSpeed |= wax;
+				EEPROM.put(4,newSpeed);
+			}
+			if(job==9) newSpeed=wax<<7;
+			else if(job==10){
+				newSpeed |= wax;
+				EEPROM.put(6,newSpeed);
+			}
+			if(job==11) newSpeed=wax<<7;
+			else if(job==12){
+				newSpeed |= wax;
+				EEPROM.put(8,newSpeed);
+				readAccels();
+			}
+			++job;
 		}
 	}
-
-	/*static unsigned long timeSerial=0;
-	if(Serial.available()){
-		timeReceived = now;
-		timeSerial = now;
-		const long wax=Serial.parseInt();
-		goal[0]=wax;
-		while(Serial.available()) Serial.read();
-	}*/
 
 	// disable larson scanner whenever motors turn
 	serialActive = now-timeSerial<1000?1:0;

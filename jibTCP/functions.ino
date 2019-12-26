@@ -204,6 +204,19 @@ int analogRead(byte pin){
 	return result[pin];
 }
 
+// Read accelerations from memory
+void readAccels(){
+	Serial.print(F("Accels:"));
+	word accel;
+	for(byte i=0; i<3; i++){
+		EEPROM.get(4+i*2,accel);
+		acceleration[i]=accel/100.;
+		Serial.print("  ");
+		Serial.print(accel); // in units of 10 steps/(s^2)
+	}
+	Serial.println();
+}
+
 void setup() {
 	DDRD |= 0b01110000; // step pins outputs
 	Serial.begin(250000); // Set baud rate in serial monitor
@@ -216,8 +229,9 @@ void setup() {
 	pinMode(9,INPUT_PULLUP); // diag1 hook
 	fastMode();
 	led.begin();
+	readAccels();
 
-	// Ethernet stuff below
+	// Ethernet stuff
 	Ethernet.init(10); // Ethernet shield CS pin
 	//EEPROM.update(0,3); // you can use this line to update unique IP address
 	const byte myIP=EEPROM.read(0);
@@ -232,3 +246,10 @@ void setup() {
 	server.begin();
 	serverLoc.begin();
 }
+
+/*EEPROM map:
+*bytes 0,1,2,3 reserved for IP-address
+*4,5 slew acceleration
+*6,7 trolley acceleration
+*8,9 hook acceleration
+*/

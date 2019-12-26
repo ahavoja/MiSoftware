@@ -56,7 +56,12 @@ slewOld=0
 trolleyOld=0
 hookOld=0
 buffer=bytearray(7)
+accelBuffer=bytearray(7)
 settings=0b10100000
+slewAccel=100
+struct.pack_into('>BB',accelBuffer,1,(slewAccel&0x3FFF)>>7,slewAccel&0x7F)
+struct.pack_into('>BB',accelBuffer,3,(slewAccel&0x3FFF)>>7,slewAccel&0x7F)
+struct.pack_into('>BB',accelBuffer,5,(slewAccel&0x3FFF)>>7,slewAccel&0x7F)
 
 # -------- Main Program Loop -----------
 done = False #Loop until the user clicks the close button.
@@ -86,6 +91,8 @@ while done==False:
 				settings &= ~0b100000 # stop
 			if event.key == pygame.K_l:
 				settings ^= 0b100 # lights on/off
+			if event.key == pygame.K_u:
+				send=1
 
 	# keyboard control
 	keys=pygame.key.get_pressed()
@@ -145,17 +152,16 @@ while done==False:
 				settings &= ~0b10000 # stop homing
 				textPrint.print(screen,"USB on")
 		if send:
+			struct.pack_into('>B',accelBuffer,0,settings&0b1000000)
 			try:
-				ser.write(bytes(struct.pack('>bb',-127,wax))) # sometimes send also settings
+				ser.write(accelBuffer) # sometimes send accelerations
 			except:
 				ser=None
 				cat=None
 				say=False
 			else:
 				send=0
-				wax &= ~2 # stop homing
-				wax &= ~4 # stop stopping
-				textPrint.print(screen,"Settings {}".format(wax))
+				print('Accelerations sent.')
 	
 	# ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
 	
