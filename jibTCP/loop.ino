@@ -147,34 +147,53 @@ void loop() {
 		}
 	}*/
 
+/*Start bit structure
+*1  always 1 in start bit
+*0  for speed command or 1 for acceleration setting
+*1  usually 1, but 0 for emergency stop
+*0  1 to start homing
+*0  for fast mode, 1 for silent mode
+*0  1 for illumination
+*/
+
 	if(Serial.available()){
 		timeReceived = now;
 		timeSerial = now;
 		static byte job=255;
 		static int newSpeed=0;
 		const byte wax=Serial.read();
-		if(wax & 0b10000000) job=0; // start bit
-		else if(job<6){ // or else it must be a speed command
+		if(wax >> 7 == 1){ // start bit
+			if(wax & 0b00100000){ // no emergency stop
+				if(wax >> 6 == 0b10) job=0; // speed command
+			}else stopMotors(); // emergency stop
+			if(wax & 0b01000000) job=7; // acceleration setting
+			if(wax & 0b100) light=1;
+			else light=0;
+		}
+		else if(job<6){ // speed command
 			if(job==0){
 				newSpeed=wax<<7;
-				if(wax & 0b1000000) newSpeed |= 0b1100000000000000;
+				if(wax & 0b01000000) newSpeed |= 0b1100000000000000;
 			}else if(job==1){
 				newSpeed |= wax;
 				goal[0]=newSpeed;
 			}else if(job==2){
 				newSpeed=wax<<7;
-				if(wax & 0b1000000) newSpeed |= 0b1100000000000000;
+				if(wax & 0b01000000) newSpeed |= 0b1100000000000000;
 			}else if(job==3){
 				newSpeed |= wax;
 				goal[1]=newSpeed;
 			}else if(job==4){
 				newSpeed=wax<<7;
-				if(wax & 0b1000000) newSpeed |= 0b1100000000000000;
+				if(wax & 0b01000000) newSpeed |= 0b1100000000000000;
 			}else if(job==5){
 				newSpeed |= wax;
 				goal[2]=newSpeed;
 			}
 			++job;
+		}
+		else if(job>6 && job<100){ // acceleration setting
+			Serial.println("accel");
 		}
 	}
 
@@ -188,13 +207,26 @@ void loop() {
 	}*/
 
 	// disable larson scanner whenever motors turn
-	static bool serialOld=serialActive;
 	serialActive = now-timeSerial<1000?1:0;
 	static unsigned long ant=0;
-	if((serialActive>serialOld) || (spd[0]==0 && spd[1]==0 && spd[2]==0 && now-ant>100)){
-		ant=now;
-		larsonScanner();
-		serialOld=serialActive;
+	if(spd[0]==0 && spd[1]==0 && spd[2]==0){
+		static bool lightOld=0;
+		if(light){
+			if(lightOld==0){
+				led.fill(0xFFFFFF);
+				led.show();
+			}
+		}else{
+			if(lightOld==1){
+				led.fill(0x000000);
+				led.show();
+			}
+			if(now-ant>100){
+				ant=now;
+				larsonScanner();
+			}
+		}
+		lightOld=light;
 	}
 
 	// stop motors if no speed commands are received

@@ -169,7 +169,6 @@ void larsonScanner(){
 		led.setPixelColor(pos + 1, 0x800000); // Medium red
 		led.setPixelColor(pos + 2, 0x100000); // Dark red
 	}
-	//led.fill(0xFFAA00);
 	led.show();
  
 	// Rather than being sneaky and erasing just the tail pixel,

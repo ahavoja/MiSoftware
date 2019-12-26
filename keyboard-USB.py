@@ -56,7 +56,7 @@ slewOld=0
 trolleyOld=0
 hookOld=0
 buffer=bytearray(7)
-struct.pack_into('>B',buffer,0,0b10000000)
+settings=0b10100000
 
 # -------- Main Program Loop -----------
 done = False #Loop until the user clicks the close button.
@@ -79,17 +79,15 @@ while done==False:
 			done=True # Flag that we are done so we exit this loop
 		if event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_f:
-				wax &= ~1
-				send=1
+				pass
 			if event.key == pygame.K_s:
-				wax |= 1
-				send=1
+				pass
 			if event.key == pygame.K_h:
-				wax |= 2
-				send=1
+				pass
 			if event.key == pygame.K_SPACE:
-				wax |= 4
-				send=1
+				settings &= ~0b00100000 # stop
+			if event.key == pygame.K_l:
+				settings ^= 0b100 # lights on/off
 
 	# keyboard control
 	keys=pygame.key.get_pressed()
@@ -108,6 +106,7 @@ while done==False:
 			hook=-7000
 	
 	textPrint.print(screen,"{} {} {}".format(slew,trolley,hook))
+	struct.pack_into('>B',buffer,0,settings)
 	struct.pack_into('>BB',buffer,1,(slew&0x3FFF)>>7,slew&0x7F)
 	struct.pack_into('>BB',buffer,3,(trolley&0x3FFF)>>7,trolley&0x7F)
 	struct.pack_into('>BB',buffer,5,(hook&0x3FFF)>>7,hook&0x7F)
@@ -144,6 +143,7 @@ while done==False:
 				slewOld=slew
 				trolleyOld=trolley
 				hookOld=hook
+				settings |= 0b00100000 # stop stopping
 				textPrint.print(screen,"USB on")
 		if send:
 			try:

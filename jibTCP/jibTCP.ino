@@ -2,6 +2,7 @@
 // This code runs on atmega 328p microcontroller (Arduino Uno or Nano)
 /* todo:
  * receive settings
+ * adjust and lock homing speeds
  * user shouldnt be able to switch to silent mode during homing
  * remotely adjustable acceleration settings in EEPROM
  * jerk limit?
@@ -69,7 +70,7 @@ volatile long
 	posMax=2E9, posMin=-2E9, posTop=2E9;
 volatile byte homing=0, homeSlew=0, homeTrolley=0;
 int spd[3]={0,0,0}, goal[3]={0,0,0};
-bool ethernetConnected=0, serialActive=0;
+bool ethernetConnected=0, serialActive=0, light=0;
 String message;
 unsigned long now; // current time in loop()
 float acceleration[3]={4,10,4}; // slew, trolley, hook acceleration limits
