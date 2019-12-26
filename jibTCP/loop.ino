@@ -118,7 +118,7 @@ void loop() {
 		}
 	}
 
-/*Start bit structure:
+/*Start byte bit structure:
 *1  always 1 in start bit
 *0  for speed command or 1 for acceleration setting
 *1  usually 1, but 0 for emergency stop

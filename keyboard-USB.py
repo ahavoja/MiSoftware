@@ -58,11 +58,65 @@ hookOld=0
 buffer=bytearray(7)
 accelBuffer=bytearray(7)
 settings=0b10100000
-slewAccel=100
-struct.pack_into('>BB',accelBuffer,1,(slewAccel&0x3FFF)>>7,slewAccel&0x7F)
-struct.pack_into('>BB',accelBuffer,3,(slewAccel&0x3FFF)>>7,slewAccel&0x7F)
-struct.pack_into('>BB',accelBuffer,5,(slewAccel&0x3FFF)>>7,slewAccel&0x7F)
 
+slewAccel=4
+trolAccel=2
+hookAccel=2
+slewSpeed=20
+trolSpeed=10
+hookSpeed=10
+
+def readSettings():
+	global slewAccel
+	global trolAccel
+	global hookAccel
+	global slewSpeed
+	global trolSpeed
+	global hookSpeed
+	try:
+		open("settings.txt")
+	except:
+		try:
+			f=open("settings.txt","w")
+		except:
+			print('Could not create settings.txt file.')
+		else:
+			f.write('#Acceleration in units of 10 steps/(s^2). Range 0 to 16000.\n')
+			f.write('accel_slew=200\n')
+			f.write('accel_trol=100\n')
+			f.write('accel_hook=100\n\n')
+			f.write('#Speed in units of steps/s. Range 0 to 8000.\n')
+			f.write('speed_slew=2000\n')
+			f.write('speed_trol=500\n')
+			f.write('speed_hook=500\n\n')
+			f.close()
+			print('settings.txt file created.')
+	try:
+		f=open("settings.txt")
+	except:
+		print('Can not open settings.txt file.')
+	else:
+		for x in f:
+			x=x.strip()
+			if x[:11]=="accel_slew=":
+				slewAccel=int(x[11:])
+			if x[:11]=="accel_trol=":
+				trolAccel=int(x[11:])
+			if x[:11]=="accel_hook=":
+				hookAccel=int(x[11:])
+			if x[:11]=="speed_slew=":
+				slewSpeed=int(x[11:])
+			if x[:11]=="speed_trol=":
+				trolSpeed=int(x[11:])
+			if x[:11]=="speed_hook=":
+				hookSpeed=int(x[11:])
+		f.close()
+		print('Speeds:  {}  {}  {}'.format(slewSpeed,trolSpeed,hookSpeed))
+	struct.pack_into('>BB',accelBuffer,1,(slewAccel&0x3FFF)>>7,slewAccel&0x7F)
+	struct.pack_into('>BB',accelBuffer,3,(trolAccel&0x3FFF)>>7,trolAccel&0x7F)
+	struct.pack_into('>BB',accelBuffer,5,(hookAccel&0x3FFF)>>7,hookAccel&0x7F)
+readSettings()
+	
 # -------- Main Program Loop -----------
 done = False #Loop until the user clicks the close button.
 while done==False:
@@ -98,17 +152,17 @@ while done==False:
 	keys=pygame.key.get_pressed()
 	if not keys[pygame.K_SPACE]:
 		if keys[pygame.K_LEFT]:
-			slew=7000 # motor steps per second
+			slew=slewSpeed # motor steps per second
 		elif keys[pygame.K_RIGHT]:
-			slew=-7000
+			slew=-slewSpeed
 		if keys[pygame.K_UP]:
-			trolley=-4000
+			trolley=-trolSpeed
 		elif keys[pygame.K_DOWN]:
-			trolley=4000
+			trolley=trolSpeed
 		if keys[pygame.K_a]:
-			hook=7000
+			hook=hookSpeed
 		elif keys[pygame.K_z]:
-			hook=-7000
+			hook=-hookSpeed
 	
 	textPrint.print(screen,"{} {} {}".format(slew,trolley,hook))
 	struct.pack_into('>B',buffer,0,settings)
@@ -152,7 +206,8 @@ while done==False:
 				settings &= ~0b10000 # stop homing
 				textPrint.print(screen,"USB on")
 		if send:
-			struct.pack_into('>B',accelBuffer,0,settings&0b1000000)
+			readSettings()
+			struct.pack_into('>B',accelBuffer,0,settings|0b1000000)
 			try:
 				ser.write(accelBuffer) # sometimes send accelerations
 			except:
@@ -161,7 +216,7 @@ while done==False:
 				say=False
 			else:
 				send=0
-				print('Accelerations sent.')
+				print('Accelerations updated.')
 	
 	# ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
 	

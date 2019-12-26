@@ -72,4 +72,4 @@ int spd[3]={0,0,0}, goal[3]={0,0,0};
 bool ethernetConnected=0, serialActive=0, light=0, silent;
 String message;
 unsigned long now; // current time in loop()
-float acceleration[3]={4,1,0.1}; // slew, trolley, hook acceleration limits
+float acceleration[3]; // slew, trolley, hook acceleration limits
