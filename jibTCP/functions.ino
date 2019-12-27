@@ -233,18 +233,12 @@ void setup() {
 
 	// Ethernet stuff
 	Ethernet.init(10); // Ethernet shield CS pin
-	//EEPROM.update(0,3); // you can use this line to update unique IP address
+	//EEPROM.update(0,10); // you can use this line to update unique IP address
 	const byte myIP=EEPROM.read(0);
 	if(myIP==171) led.updateLength(47); // because jib number one has more leds
-	const byte mac[] = {0xA3, 0xAD, 0xBE, 0x16, 0x47, myIP}; // a3:ad:be:16:47:ab
-	IPAddress ip(192,168,EEPROM.read(1),myIP); // 192.168.0.171
-	Ethernet.begin(mac, ip);
-	if(Ethernet.hardwareStatus()==EthernetNoHardware) Serial.println(F("Ethernet shield not found. :("));
-	else if(Ethernet.linkStatus()==LinkOFF) Serial.println(F("Ethernet cable not connected. :("));
-	Serial.print(F("My IP is "));
-	Serial.println(Ethernet.localIP());
-	server.begin();
-	serverLoc.begin();
+	mac[5]=myIP; // unique MAC
+	//IPAddress ip(192,168,EEPROM.read(1),myIP); // 192.168.0.171
+	//Ethernet.begin(mac, ip);
 }
 
 /*EEPROM map:

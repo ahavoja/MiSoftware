@@ -51,16 +51,33 @@ void loop() {
 	if(ethernetConnected){
 		if(serialActive){
 			ethernetConnected=0;
-			Serial.println(F("Serial active --> Ethernet closed. :)"));
+			Serial.println(F("Serial active --> Ethernet closed."));
 		}
 		if(Ethernet.linkStatus()==LinkOFF){
-			Serial.println(F("Ethernet cable unplugged. :("));
 			ethernetConnected=0;
+			Serial.println(F("Ethernet cable unplugged."));
 		}
 	}
 	else if(!serialActive && Ethernet.linkStatus()==LinkON){
-		Serial.println(F("Ethernet activated. :)"));
-		ethernetConnected=1;
+		if(ethernetBegun==0){
+			Serial.println(F("Connecting DHCP..."));
+			if(Ethernet.begin(mac)){
+				server.begin();
+				serverLoc.begin();
+				ethernetBegun=1;
+			}else Serial.println(F("DHCP fail."));
+		}
+		if(ethernetBegun){
+			ethernetConnected=1;
+			Serial.print(F("My IP is "));
+			Serial.println(Ethernet.localIP());
+			Serial.print(F("My MAC is"));
+			for(byte x=0; x<6; x++){
+				Serial.print(" ");
+				Serial.print(mac[x],HEX);
+			}
+			Serial.println();
+		}
 	}
 	if(ethernetConnected){
 		// receive commands from PC through Ethernet

@@ -14,8 +14,8 @@ void setup() {
 	size(200, 200);
 	background(50);
 	fill(200);
-	c = new Client(this,"192.168.0.174", 10000); // crane IP and port for control
-	cr = new Client(this,"192.168.0.174", 10001); // port to read motor positions
+	c = new Client(this,"192.168.10.20", 10000); // crane IP and port for control
+	cr = new Client(this,"192.168.10.20", 10001); // port to read motor positions
 }
 
 String data;

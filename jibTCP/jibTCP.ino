@@ -68,7 +68,8 @@ volatile long
 	posMax=2E9, posMin=-2E9, posTop=2E9;
 volatile byte homing=0, homeSlew=0, homeTrolley=0;
 int spd[3]={0,0,0}, goal[3]={0,0,0};
-bool ethernetConnected=0, serialActive=0, light=0, silent;
+bool ethernetConnected=0, ethernetBegun=0, serialActive=1, light=0, silent;
 String message;
 unsigned long now; // current time in loop()
 float acceleration[3]; // slew, trolley, hook acceleration limits
+byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
