@@ -153,7 +153,7 @@ void larsonScanner(){
  
 	// Draw 5 pixels centered on pos.	setPixelColor() will clip any
 	// pixels off the ends of the strip, we don't need to watch for that.
-	if(serialActive){
+	if(receptionActive){
 		led.setPixelColor(pos - 2, 0x0000FF);
 		led.setPixelColor(pos - 1, 0x00FFFF);
 		led.setPixelColor(pos    , 0x00FF00);
@@ -215,6 +215,83 @@ void readAccels(){
 		Serial.print(accel); // in units of 10 steps/(s^2)
 	}
 	Serial.println();
+}
+
+/*Start byte bit structure:
+*1  always 1 in start byte
+*0  for speed command or 1 for acceleration setting
+*1  usually 1, but 0 for emergency stop
+*0  1 to start homing
+*0  for fast mode, 1 for silent mode
+*0  1 for illumination
+*0
+*0
+*/
+
+// Commands from USB and Ethernet are passed to this function, which then adjusts motor speeds and settings accordingly
+void interpretByte(const byte wax){
+	timeReceived = now;
+	static byte job=255;
+	static int newSpeed=0;
+	if(wax & 0b10000000){ // start byte
+		if(wax & 0b100000){ // no emergency stop
+			if(homing==0){ // dont start homing again if we are already homing
+				if(wax & 0b10000) homing=1;
+				else if((wax & 0b1000000) == 0) job=0; // speed command
+			}
+		}else stopMotors(); // emergency stop
+		if(wax & 0b1000000) job=7; // acceleration setting
+		if(homing==0){
+			if(wax & 0b1000){
+				if(silent==0) silentMode();
+			}else{
+				if(silent==1) fastMode();
+			}
+		}
+		if(wax & 0b100) light=1;
+		else light=0;
+	}
+	else if(job<6){ // speed command
+		if(job==0){
+			newSpeed=wax<<7;
+			if(wax & 0b01000000) newSpeed |= 0b1100000000000000;
+		}else if(job==1){
+			newSpeed |= wax;
+			goal[0]=newSpeed;
+		}else if(job==2){
+			newSpeed=wax<<7;
+			if(wax & 0b01000000) newSpeed |= 0b1100000000000000;
+		}else if(job==3){
+			newSpeed |= wax;
+			goal[1]=newSpeed;
+		}else if(job==4){
+			newSpeed=wax<<7;
+			if(wax & 0b01000000) newSpeed |= 0b1100000000000000;
+		}else if(job==5){
+			newSpeed |= wax;
+			goal[2]=newSpeed;
+		}
+		++job;
+	}
+	else if(job>6 && job<13){ // acceleration setting
+		if(job==7) newSpeed=wax<<7;
+		else if(job==8){
+			newSpeed |= wax;
+			EEPROM.put(4,newSpeed);
+		}
+		if(job==9) newSpeed=wax<<7;
+		else if(job==10){
+			newSpeed |= wax;
+			EEPROM.put(6,newSpeed);
+		}
+		if(job==11) newSpeed=wax<<7;
+		else if(job==12){
+			newSpeed |= wax;
+			EEPROM.put(8,newSpeed);
+			readAccels();
+		}
+		++job;
+	}
 }
 
 void setup() {

@@ -47,7 +47,6 @@ void loop() {
 	setSpeed(2);
 
 	// Ethernet stuff
-	static unsigned long timeReceived=0;
 	if(ethernetConnected){
 		if(serialActive){
 			ethernetConnected=0;
@@ -82,33 +81,7 @@ void loop() {
 	if(ethernetConnected){
 		// receive commands from PC through Ethernet
 		client = server.available();
-		if(client.available()>=3){ // 3 speed commands received
-			//Serial.print("Received");
-			timeReceived=now;
-			for(byte zoo=0; zoo<3; zoo++){
-				const char buff=client.read();
-				if(homing==0) goal[zoo]=buff; // set new speed goals for motors
-				//Serial.write(' ');
-				//Serial.print(goal[zoo],DEC);
-			}
-			//Serial.println();
-		}
-
-		// receive settings
-		else if(client.available()>=1){
-			const char wax=client.read();
-			Serial.print("Settings ");
-			Serial.println(wax,BIN);
-			if(wax == 4){
-				stopMotors();
-			}else{
-				if(wax == 2) homing=1;
-				else{
-					if(wax == 1) silentMode();
-					else fastMode();
-				}
-			}
-		}
+		if(client.available()) interpretByte(client.read());
 
 		// Send motor positions to PC
 		clientLoc = serverLoc.available();
@@ -135,82 +108,11 @@ void loop() {
 		}
 	}
 
-/*Start byte bit structure:
-*1  always 1 in start bit
-*0  for speed command or 1 for acceleration setting
-*1  usually 1, but 0 for emergency stop
-*0  1 to start homing
-*0  for fast mode, 1 for silent mode
-*0  1 for illumination
-*/
-
 	// receive commands from PC through USB
 	static unsigned long timeSerial=0;
 	if(Serial.available()){
-		timeReceived = now;
 		timeSerial = now;
-		static byte job=255;
-		static int newSpeed=0;
-		const byte wax=Serial.read();
-		if(wax & 0b10000000){ // start byte
-			if(wax & 0b100000){ // no emergency stop
-				if(homing==0){ // dont start homing again if we are already homing
-					if(wax & 0b10000) homing=1;
-					else if((wax & 0b1000000) == 0) job=0; // speed command
-				}
-			}else stopMotors(); // emergency stop
-			if(wax & 0b1000000) job=7; // acceleration setting
-			if(homing==0){
-				if(wax & 0b1000){
-					if(silent==0) silentMode();
-				}else{
-					if(silent==1) fastMode();
-				}
-			}
-			if(wax & 0b100) light=1;
-			else light=0;
-		}
-		else if(job<6){ // speed command
-			if(job==0){
-				newSpeed=wax<<7;
-				if(wax & 0b01000000) newSpeed |= 0b1100000000000000;
-			}else if(job==1){
-				newSpeed |= wax;
-				goal[0]=newSpeed;
-			}else if(job==2){
-				newSpeed=wax<<7;
-				if(wax & 0b01000000) newSpeed |= 0b1100000000000000;
-			}else if(job==3){
-				newSpeed |= wax;
-				goal[1]=newSpeed;
-			}else if(job==4){
-				newSpeed=wax<<7;
-				if(wax & 0b01000000) newSpeed |= 0b1100000000000000;
-			}else if(job==5){
-				newSpeed |= wax;
-				goal[2]=newSpeed;
-			}
-			++job;
-		}
-		else if(job>6 && job<13){ // acceleration setting
-			if(job==7) newSpeed=wax<<7;
-			else if(job==8){
-				newSpeed |= wax;
-				EEPROM.put(4,newSpeed);
-			}
-			if(job==9) newSpeed=wax<<7;
-			else if(job==10){
-				newSpeed |= wax;
-				EEPROM.put(6,newSpeed);
-			}
-			if(job==11) newSpeed=wax<<7;
-			else if(job==12){
-				newSpeed |= wax;
-				EEPROM.put(8,newSpeed);
-				readAccels();
-			}
-			++job;
-		}
+		interpretByte(Serial.read());
 	}
 
 	// disable larson scanner whenever motors turn
@@ -238,8 +140,9 @@ void loop() {
 
 	// stop motors if no speed commands are received
 	if(now - timeReceived > 1000){
+		receptionActive=0;
 		goal[0]=0; goal[1]=0; goal[2]=0;
-	}
+	}else receptionActive=1;
 	
 	if(homing>0) home();
 	

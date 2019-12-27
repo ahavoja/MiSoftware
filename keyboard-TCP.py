@@ -1,21 +1,12 @@
-# Hello, Joel here. With this code you can control one crane with your computer's keyboard through serial (USB wire). Use arrow keys, and A, Z, L, H, S, U keys.
+# Hello, Joel here. With this code you can control one crane with your computer's keyboard through ethernet. Use arrow keys, and A, Z, L, H, S, U keys.
 
 # libraries you may need to install with pip
 import pygame # pip install pygame
-import serial # pip install pyserial
-import serial.tools.list_ports
 
 # comes with Python 3.7.2
 import struct
 import threading
-import time
-
-def monitor(fan): # prints whatever arduino sends us
-	while True:
-		try:
-			print(fan.readline().rstrip().decode())
-		except:
-			break
+import socket
 
 # Define some colors
 BLACK=(0,0,0)
@@ -41,15 +32,10 @@ class TextPrint:
 
 pygame.init()
 screen = pygame.display.set_mode([300, 300]) # screen size [width,height]
-pygame.display.set_caption("key-USB")
+pygame.display.set_caption("key-TCP")
 clock = pygame.time.Clock() # Used to manage how fast the screen updates
 textPrint = TextPrint() # Get ready to print
 
-ser=None
-cat=None
-say=False
-old=0
-wax=0
 slewOld=0
 trolleyOld=0
 hookOld=0
@@ -57,6 +43,7 @@ buffer=bytearray(7)
 accelBuffer=bytearray(7)
 settings=0b10100000
 
+IP="0.0.0.0"
 slewAccel=4
 trolAccel=2
 hookAccel=2
@@ -65,6 +52,7 @@ trolSpeed=10
 hookSpeed=10
 
 def readSettings():
+	global IP
 	global slewAccel
 	global trolAccel
 	global hookAccel
@@ -79,6 +67,7 @@ def readSettings():
 		except:
 			print('Could not create settings.txt file.')
 		else:
+			f.write('IP_address=192.168.10.21\n\n')
 			f.write('#Acceleration in units of 10 steps/(s^2). Range 0 to 16000.\n')
 			f.write('accel_slew=200\n')
 			f.write('accel_trol=100\n')
@@ -96,6 +85,8 @@ def readSettings():
 	else:
 		for x in f:
 			x=x.strip()
+			if x[:11]=="IP_address=":
+				IP=x[11:]
 			if x[:11]=="accel_slew=":
 				slewAccel=int(x[11:])
 			if x[:11]=="accel_trol=":
@@ -109,12 +100,24 @@ def readSettings():
 			if x[:11]=="speed_hook=":
 				hookSpeed=int(x[11:])
 		f.close()
+		print('Crane IP:  {}'.format(IP))
 		print('Speeds:  {}  {}  {}'.format(slewSpeed,trolSpeed,hookSpeed))
 	struct.pack_into('>BB',accelBuffer,1,(slewAccel&0x3FFF)>>7,slewAccel&0x7F)
 	struct.pack_into('>BB',accelBuffer,3,(trolAccel&0x3FFF)>>7,trolAccel&0x7F)
 	struct.pack_into('>BB',accelBuffer,5,(hookAccel&0x3FFF)>>7,hookAccel&0x7F)
 readSettings()
-	
+
+# Send through ethernet
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.settimeout(3)
+print("Connecting to {}...".format(IP))
+try:
+	sock.connect((IP,10000))
+except:
+	print("Can't connect.")
+else:
+	print("Connected.")
+
 # -------- Main Program Loop -----------
 done = False #Loop until the user clicks the close button.
 while done==False:
@@ -168,53 +171,28 @@ while done==False:
 	struct.pack_into('>BB',buffer,3,(trolley&0x3FFF)>>7,trolley&0x7F)
 	struct.pack_into('>BB',buffer,5,(hook&0x3FFF)>>7,hook&0x7F)
 	
-	if ser is None: # auto select arduino COM port
-		if cat is None:
-			now=time.time()
-			if now-old > 1 : # reduces CPU usage
-				old=now
-				for dog in serial.tools.list_ports.comports():
-					print(dog)
-					cat=dog.device
-				if say is False:
-					say=True
-					if cat is None:
-						print('Plug Arduino USB cable.')
+	if slew!=slewOld or trolley!=trolleyOld or hook!=hookOld or 1:
+		try:
+			sock.sendall(buffer) # send speeds to Arduino
+		except:
+			print("Could not send speeds.")
 		else:
-			try:
-				ser = serial.Serial(cat,250000) # port, baud rate
-			except:
-				pass
-			else:
-				threading.Thread(target=monitor, args=(ser,)).start()
-	
-	else:
-		if slew!=slewOld or trolley!=trolleyOld or hook!=hookOld or 1:
-			try:
-				ser.write(buffer) # send speeds to Arduino
-			except:
-				ser=None
-				cat=None
-				say=False
-			else:
-				slewOld=slew
-				trolleyOld=trolley
-				hookOld=hook
-				settings |= 0b100000 # stop stopping
-				settings &= ~0b10000 # stop homing
-				textPrint.print(screen,"USB on")
-		if send:
-			readSettings()
-			struct.pack_into('>B',accelBuffer,0,settings|0b1000000)
-			try:
-				ser.write(accelBuffer) # sometimes send accelerations
-			except:
-				ser=None
-				cat=None
-				say=False
-			else:
-				send=0
-				print('Accelerations sent.')
+			slewOld=slew
+			trolleyOld=trolley
+			hookOld=hook
+			settings |= 0b100000 # stop stopping
+			settings &= ~0b10000 # stop homing
+			textPrint.print(screen,"TCP on")
+	if send:
+		readSettings()
+		struct.pack_into('>B',accelBuffer,0,settings|0b1000000)
+		try:
+			sock.sendall(accelBuffer) # sometimes send accelerations
+		except:
+			print("Could not send accelerations.")
+		else:
+			send=0
+			print('Accelerations sent.')
 	
 	# ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
 	
@@ -227,5 +205,5 @@ while done==False:
 # Close the window and quit.
 # If you forget this line, the program will 'hang'
 # on exit if running from IDLE.
-ser.close()
-pygame.quit ()
+sock.close()
+pygame.quit()
