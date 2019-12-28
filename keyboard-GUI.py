@@ -150,7 +150,7 @@ class TextPrint:
 		self.x -= 20
 
 pygame.init()
-screen = pygame.display.set_mode([300, 300]) # screen size [width,height]
+screen = pygame.display.set_mode([300, 150]) # screen size [width,height]
 pygame.display.set_caption("keyboard")
 clock = pygame.time.Clock() # Used to manage how fast the screen updates
 textPrint = TextPrint() # Get ready to print

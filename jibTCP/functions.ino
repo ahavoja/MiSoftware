@@ -69,6 +69,16 @@ void fastMode(){
 	hook.coolstep_min_speed(400);
 }
 
+void stopMotors(){
+	goal[0]=0; goal[1]=0; goal[2]=0;
+	spd[0]=0; spd[1]=0; spd[2]=0;
+	setSpeed(0); setSpeed(1); setSpeed(2);
+	homing=0; homeTrolley=0; homeSlew=0;
+	posMax=2E9; posMin=-2E9; posTop=2E9;
+	Serial.println(F("Stop motors"));
+	readAccels(); // set accelerations back to normal if homing is stopped
+}
+
 // calculates new speed for motor and limits its acceleration
 // call this function in every iteration of loop(), once for each motor
 // parameter: motor (0 or 1 or 2)
@@ -137,15 +147,6 @@ inline void fox(unsigned long cycles){
 	ICR1 = period;
 	TCCR1B = _BV(WGM13) | _BV(WGM12) | clockSelectBits; // mode 12. p136
 	//TCNT1 = 0; // reset counter. p115
-}
-
-void stopMotors(){
-	goal[0]=0; goal[1]=0; goal[2]=0;
-	spd[0]=0; spd[1]=0; spd[2]=0;
-	setSpeed(0); setSpeed(1); setSpeed(2);
-	homing=0; homeTrolley=0; homeSlew=0;
-	posMax=2E9; posMin=-2E9; posTop=2E9;
-	Serial.println(F("Stop motors"));
 }
 
 void larsonScanner(){
@@ -288,7 +289,7 @@ void interpretByte(const byte wax){
 		else if(job==12){
 			newSpeed |= wax;
 			EEPROM.put(8,newSpeed);
-			readAccels();
+			if(homing==0) readAccels(); // don't change accelerations during homing
 		}
 		++job;
 	}
