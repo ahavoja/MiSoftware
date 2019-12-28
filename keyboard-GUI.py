@@ -72,7 +72,6 @@ def readSettings():
 				trolSpeed=int(x[11:])
 			if x[:11]=="speed_hook=":
 				hookSpeed=int(x[11:])
-		print('Crane IP from file:  {}'.format(IP))
 		print('Speeds:  {}  {}  {}'.format(slewSpeed,trolSpeed,hookSpeed))
 	finally:
 		f.close()
@@ -89,6 +88,8 @@ def serStop():
 	global ser
 	global cat
 	global say
+	if ser is not None:
+		ser.close()
 	ser=None
 	cat=None
 	say=False
@@ -253,7 +254,8 @@ while done==False:
 				else:
 					send=0
 					print('Accelerations sent.')
-
+	else:
+		serStop()
 	if radVal.get()==3: # send via TCP
 		if not sockConnected:
 			print("Connecting to {}...".format(IP))
@@ -300,5 +302,5 @@ while done==False:
 # If you forget this line, the program will 'hang'
 # on exit if running from IDLE.
 sock.close()
-ser.close()
+serStop()
 pygame.quit()
