@@ -50,9 +50,6 @@ cat=None
 say=False
 old=0
 wax=0
-slewOld=0
-trolleyOld=0
-hookOld=0
 buffer=bytearray(7)
 accelBuffer=bytearray(7)
 settings=0b10100000
@@ -189,20 +186,16 @@ while done==False:
 				threading.Thread(target=monitor, args=(ser,)).start()
 	
 	else:
-		if slew!=slewOld or trolley!=trolleyOld or hook!=hookOld or 1:
-			try:
-				ser.write(buffer) # send speeds to Arduino
-			except:
-				ser=None
-				cat=None
-				say=False
-			else:
-				slewOld=slew
-				trolleyOld=trolley
-				hookOld=hook
-				settings |= 0b100000 # stop stopping
-				settings &= ~0b10000 # stop homing
-				textPrint.print(screen,"USB on")
+		try:
+			ser.write(buffer) # send speeds to Arduino
+		except:
+			ser=None
+			cat=None
+			say=False
+		else:
+			settings |= 0b100000 # stop stopping
+			settings &= ~0b10000 # stop homing
+			textPrint.print(screen,"USB on")
 		if send:
 			readSettings()
 			struct.pack_into('>B',accelBuffer,0,settings|0b1000000)
