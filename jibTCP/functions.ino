@@ -46,7 +46,7 @@ void settings(){ // this function changes some settings of TMC2130
 	hook.double_edge_step(1);
 	hook.chopper_mode(0);
 	hook.diag1_stall(1);
-	hook.sg_stall_value(0); // todo adjust this to match NEMA23 1.5A motor
+	hook.sg_stall_value(0);
 }
 
 void silentMode(){
@@ -73,10 +73,10 @@ void stopMotors(){
 	goal[0]=0; goal[1]=0; goal[2]=0;
 	spd[0]=0; spd[1]=0; spd[2]=0;
 	setSpeed(0); setSpeed(1); setSpeed(2);
-	homing=0; homeTrolley=0; homeSlew=0;
-	posMax=2E9; posMin=-2E9; posTop=2E9;
 	Serial.println(F("Stop motors"));
-	readAccels(); // set accelerations back to normal if homing is stopped
+	if(homing>0) readAccels(); // set accelerations back to normal if homing is stopped
+	homing=0; homeTrolley=0; homeSlew=0;
+	//posMax=2E9; posMin=-2E9; posTop=2E9;
 }
 
 // calculates new speed for motor and limits its acceleration
@@ -111,18 +111,17 @@ void setSpeed(byte motor){
 		unsigned long newKid=16000000UL/abs(spd[motor]); // how many CPU cycles to wait between steps
 		if(newKid>0xFFFF00) newKid=0xFFFF00; // why would we even try to step slower than this
 		cli();
-		motOn[motor]=1;
-		kid[motor]=newKid;
+		if(homing!=4 && homeTrolley!=2 && homeTrolley!=4){
+			motOn[motor]=1;
+			kid[motor]=newKid;
+		}
 		sei();
 	}
 }
 
 // function to set timer1 period. Stolen from https://www.pjrc.com/teensy/td_libs_TimerOne.html
 inline void fox(unsigned long cycles){
-	/*if(homeSlew>0){
-		if(cycles<2400) cycles=2400; //cos analogRead(A6) is slow
-	}
-	else */if(cycles<700) cycles=700; // minimum cycles, cuz ISR takes some time too
+	if(cycles<1200) cycles=1200; // minimum cycles, cuz ISR takes some time too
 	byte clockSelectBits;
 	word period;
 	if (cycles < 0x10000) {
@@ -207,15 +206,17 @@ int analogRead(byte pin){
 
 // Read accelerations from memory
 void readAccels(){
-	Serial.print(F("Accels:"));
+	if(homing==0) Serial.print(F("Accels:"));
 	word accel;
 	for(byte i=0; i<3; i++){
 		EEPROM.get(4+i*2,accel);
 		acceleration[i]=accel/100.;
-		Serial.print("  ");
-		Serial.print(accel); // in units of 10 steps/(s^2)
+		if(homing==0){
+			Serial.print("  ");
+			Serial.print(accel); // in units of 10 steps/(s^2)
+		}
 	}
-	Serial.println();
+	if(homing==0) Serial.println();
 }
 
 /*Start byte bit structure:

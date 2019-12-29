@@ -40,11 +40,9 @@ void loop() {
 		hook.shaft_dir(newDir2);
 		dir[2]=newDir2;
 	}
-	if(newDir2==0 && (PINC&8)==0){ // slack detection
-		Serial.println(F("Slack detected"));
+	if(spd[2]<0 && (PINC&8)==0){ // slack detection
 		hookHitGround=1;
 		spd[2]=0;
-		goal[2]=0;
 	}
 	setSpeed(2);
 

@@ -28,8 +28,6 @@ ISR(TIMER1_CAPT_vect){ // http://www.gammon.com.au/interrupts
 			}else{ // diag1 low, stall detected during homing
 				motOn[1]=0;
 				kid[1]=0xFFFF00;
-				spd[1]=0;
-				goal[1]=0;
 				++homeTrolley;
 			}
 		}else{ // normal mode
@@ -55,9 +53,7 @@ ISR(TIMER1_CAPT_vect){ // http://www.gammon.com.au/interrupts
 			}else{ // stall detected
 				motOn[2]=0;
 				kid[2]=0xFFFF00;
-				spd[2]=0;
-				goal[2]=0;
-				homing++;
+				homing=4;
 			}
 		}else{ // normal mode
 			if(dir[2]){
