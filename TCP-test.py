@@ -139,7 +139,7 @@ def monitorTCP():
 		while sockConnected:
 			sockPos.sendall(bytes(1))
 			data=sockPos.recv(32)
-			print(data)
+			print(data.rstrip().decode())
 			time.sleep(1)
 	finally:
 		sockPos.close()
