@@ -6,7 +6,7 @@ void loop() {
 	static bool newDir0=0;
 	if(spd[0]>0) newDir0=1; else
 	if(spd[0]<0) newDir0=0;
-	if (newDir0!=dir[0]){
+	if(newDir0!=dir[0]){
 		slew.shaft_dir(newDir0);
 		dir[0]=newDir0;
 	}
@@ -21,7 +21,7 @@ void loop() {
 	static bool newDir1=0;
 	if(spd[1]>0) newDir1=1; else
 	if(spd[1]<0) newDir1=0;
-	if (newDir1!=dir[1]){
+	if(newDir1!=dir[1]){
 		trolley.shaft_dir(newDir1);
 		dir[1]=newDir1;
 	}
@@ -36,13 +36,13 @@ void loop() {
 	static bool newDir2=0;
 	if(spd[2]>0) newDir2=1; else
 	if(spd[2]<0) newDir2=0;
-	if (newDir2!=dir[2]){
+	if(newDir2!=dir[2]){
 		hook.shaft_dir(newDir2);
 		dir[2]=newDir2;
 	}
-	if(newDir2==0 && (PINC&8)==0){ // slack detection
+	if(spd[2]<0 && (PINC&8)==0){ // slack detection
+		hookHitGround=1;
 		spd[2]=0;
-		goal[2]=0;
 	}
 	setSpeed(2);
 
@@ -50,11 +50,11 @@ void loop() {
 	if(ethernetConnected){
 		if(serialActive){
 			ethernetConnected=0;
-			Serial.println(F("Serial active --> Ethernet closed."));
+			Serial.println(F("Serial active --> Ethernet closed"));
 		}
 		if(Ethernet.linkStatus()==LinkOFF){
 			ethernetConnected=0;
-			Serial.println(F("Ethernet cable unplugged."));
+			Serial.println(F("Ethernet cable unplugged"));
 		}
 	}
 	else if(!serialActive && Ethernet.linkStatus()==LinkON){
@@ -64,7 +64,7 @@ void loop() {
 				server.begin();
 				serverLoc.begin();
 				ethernetBegun=1;
-			}else Serial.println(F("DHCP fail."));
+			}else Serial.println(F("DHCP fail"));
 		}
 		if(ethernetBegun){
 			ethernetConnected=1;

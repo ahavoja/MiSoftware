@@ -1,20 +1,14 @@
 // Interrupt Service Routine that automatically keeps stepping motors
-ISR(TIMER1_CAPT_vect) // http://www.gammon.com.au/interrupts
-{
+ISR(TIMER1_CAPT_vect){ // http://www.gammon.com.au/interrupts
 	static bool man[3]={0}; // which motors to step next
 	
 	// slew
-	if(motOn[0] && man[0])
-	{
-		if(homeSlew>0) // homing mode
-		{
+	if(motOn[0] && man[0]){
+		if(homeSlew>0){ // homing mode
 			const int box = analogRead(A6);
-			if(homeSlew==1 && box>923)
-			{
+			if(homeSlew==1 && box>923){
 				homeSlew=2;
-			}
-			else if(homeSlew==2 && box<512)
-			{
+			}else if(homeSlew==2 && box<512){
 				homeSlew=3;
 				pos[0]=0;
 			}
@@ -25,37 +19,24 @@ ISR(TIMER1_CAPT_vect) // http://www.gammon.com.au/interrupts
 	}
 	
 	// trolley
-	if(motOn[1] && man[1])
-	{
-		if(homeTrolley>0) // homing mode
-		{
-			if(PINB & 1) // trolley stallGuard diag1 high
-			{
+	if(motOn[1] && man[1]){
+		if(homeTrolley>0){ // homing mode
+			if(PINB & 1){ // trolley stallGuard diag1 high
 				if(dir[1]) ++pos[1];
 				else --pos[1];
 				PORTD ^= 1<<5;
-			}
-			else // diag1 low, stall detected during homing
-			{
+			}else{ // diag1 low, stall detected during homing
 				motOn[1]=0;
 				kid[1]=0xFFFF00;
-				spd[1]=0;
-				goal[1]=0;
 				++homeTrolley;
 			}
-		}
-		else // normal mode
-		{
-			if(dir[1])
-			{
-				if(pos[1]<posMax)
-				{
+		}else{ // normal mode
+			if(dir[1]){
+				if(pos[1]<posMax){
 					++pos[1];
 					PORTD ^= 1<<5;
 				}
-			}
-			else if(pos[1]>posMin)
-			{
+			}else if(pos[1]>posMin){
 				--pos[1];
 				PORTD ^= 1<<5;
 			}
@@ -63,36 +44,24 @@ ISR(TIMER1_CAPT_vect) // http://www.gammon.com.au/interrupts
 	}
 
 	// hook
-	if(motOn[2] && man[2])
-	{
-		if(homing>0) // homing mode
-		{
-			if(PINB & 2)
-			{
-				++pos[2];
+	if(motOn[2] && man[2]){
+		if(homing==3){ // homing mode
+			if(PINB & 2){
+				if(dir[2]) ++pos[2];
+				else --pos[2];
 				PORTD ^= 1<<6;
-			}
-			else // stall detected
-			{
+			}else{ // stall detected
 				motOn[2]=0;
 				kid[2]=0xFFFF00;
-				spd[2]=0;
-				goal[2]=0;
-				homing++;
+				homing=4;
 			}
-		}
-		else // normal mode
-		{
-			if(dir[2])
-			{
-				if(pos[2]<posTop)
-				{
+		}else{ // normal mode
+			if(dir[2]){
+				if(pos[2]<posTop){
 					++pos[2];
 					PORTD ^= 1<<6;
 				}
-			}
-			else
-			{
+			}else{
 				--pos[2];
 				PORTD ^= 1<<6;
 			}
@@ -105,25 +74,19 @@ ISR(TIMER1_CAPT_vect) // http://www.gammon.com.au/interrupts
  	if(kid[2]<boy[2]) boy[2]=kid[2];
 
 	// find who is the smallest boy
-	unsigned long small=160000; // set maximum ISR refresh period
-	if(boy[0]<=boy[1] && boy[0]<=boy[2] && boy[0]<=small)
-	{
+	unsigned long small=160000; // set maximum ISR refresh period, so it runs often enough
+	if(boy[0]<=boy[1] && boy[0]<=boy[2] && boy[0]<=small){
 		man[0]=1;
 		small=boy[0];
-	}
-	else man[0]=0;
-	if(boy[1]<=boy[0] && boy[1]<=boy[2] && boy[1]<=small)
-	{
+	}else man[0]=0;
+	if(boy[1]<=boy[0] && boy[1]<=boy[2] && boy[1]<=small){
 		man[1]=1;
 		small=boy[1];
-	}
-	else man[1]=0;
-	if(boy[2]<=boy[0] && boy[2]<=boy[1] && boy[2]<=small)
-	{
+	}else man[1]=0;
+	if(boy[2]<=boy[0] && boy[2]<=boy[1] && boy[2]<=small){
 		man[2]=1;
 		small=boy[2];
-	}
-	else man[2]=0;
+	}else man[2]=0;
 
 	// update boys
 	boy[0]-=small;
@@ -137,7 +100,6 @@ ISR(TIMER1_CAPT_vect) // http://www.gammon.com.au/interrupts
 }
 
 volatile byte rat=0;
-ISR(TIMER1_OVF_vect)
-{
+ISR(TIMER1_OVF_vect){
 	++rat;
 }
