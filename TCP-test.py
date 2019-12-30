@@ -93,10 +93,6 @@ def serStop():
 	ser=None
 	cat=None
 	say=False
-def USBohjaus():
-	radVal.set(2)
-	global say
-	say=False
 
 ikkuna=Tk()
 ikkuna.title("Asetukset")
@@ -113,33 +109,32 @@ lbl.grid(column=0,row=0)
 radVal=IntVar()
 radVal.set(1)
 rad1=Radiobutton(ikkuna,text='Ei mikään',value=1,variable=radVal)
-rad2=Radiobutton(ikkuna,text='USB',value=2,variable=radVal,command=USBohjaus)
+rad2=Radiobutton(ikkuna,text='USB',value=2,variable=radVal)
 rad3=Radiobutton(ikkuna,text=IP,value=3,variable=radVal)
 rad1.grid(column=1,row=0)
 rad2.grid(column=2,row=0)
 rad3.grid(column=3,row=0)
 
 
-def monitor(fan): # prints whatever arduino sends us
+def monitorUSB(fan): # prints whatever arduino sends us
 	while True:
 		try:
-			print(fan.readline().rstrip().decode())
+			print('Crane: '+fan.readline().rstrip().decode())
 		except:
 			break
 
 def monitorTCP():
-	print("Connecting to IP {} port 10001...".format(IP))
 	try:
 		sockPos.connect((IP,10001))
 	except:
-		print("Can't connect to port 10001.")
+		print("Failed to connect to IP {} port 10001.".format(IP))
 		radVal.set(1)
 	else:
-		print("Connected to port 10001.")
+		print("Connected to IP {} port 10001.".format(IP))
 		while sockConnected:
 			sockPos.sendall(bytes(1))
 			data=sockPos.recv(32)
-			print(data.rstrip().decode())
+			print('Crane: '+data.rstrip().decode())
 			time.sleep(1)
 	finally:
 		sockPos.close()
@@ -168,7 +163,7 @@ class TextPrint:
 		self.x -= 20
 
 pygame.init()
-screen = pygame.display.set_mode([300, 300]) # screen size [width,height]
+screen = pygame.display.set_mode([250, 100]) # screen size [width,height]
 pygame.display.set_caption("keyboard")
 clock = pygame.time.Clock() # Used to manage how fast the screen updates
 textPrint = TextPrint() # Get ready to print
@@ -176,11 +171,11 @@ textPrint = TextPrint() # Get ready to print
 old=0
 wax=0
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.settimeout(3)
+sockSpd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sockSpd.settimeout(2)
 sockConnected=False
 sockPos = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sockPos.settimeout(3)
+sockPos.settimeout(2)
 
 # -------- Main Program Loop -----------
 done = False #Loop until the user clicks the close button.
@@ -231,6 +226,9 @@ while done==False:
 			hook=-hookSpeed
 	
 	textPrint.print(screen,"{} {} {}".format(slew,trolley,hook))
+	if settings&0b100:
+		textPrint.print(screen,'lights on')
+	
 	struct.pack_into('>B',buffer,0,settings)
 	struct.pack_into('>BB',buffer,1,(slew&0x3FFF)>>7,slew&0x7F)
 	struct.pack_into('>BB',buffer,3,(trolley&0x3FFF)>>7,trolley&0x7F)
@@ -255,7 +253,7 @@ while done==False:
 				except:
 					pass
 				else:
-					threading.Thread(target=monitor, args=(ser,)).start()
+					threading.Thread(target=monitorUSB, args=(ser,)).start()
 		else: # send data to arduino
 			try:
 				ser.write(buffer) # send speeds
@@ -278,22 +276,21 @@ while done==False:
 		serStop()
 	if radVal.get()==3: # send via TCP
 		if not sockConnected:
-			print("Connecting to {}...".format(IP))
 			try:
-				sock.connect((IP,10000))
+				sockSpd.connect((IP,10000))
 			except:
-				print("Can't connect.")
+				print("Failed to connect to IP {} port 10000.".format(IP))
 				radVal.set(1)
 			else:
-				print("Connected.")
+				print("Connected to IP {} port 10000.".format(IP))
 				sockConnected=True
 				threading.Thread(target=monitorTCP).start()
 		else:
 			try:
-				sock.sendall(buffer) # send speeds to Arduino
+				sockSpd.sendall(buffer) # send speeds to Arduino
 			except:
-				print("Could not send speeds.")
-				sock.close()
+				print("Could not send speeds. Disconnected from port 10000.")
+				sockSpd.close()
 				sockConnected=False
 			else:
 				settings |= 0b100000 # stop stopping
@@ -302,26 +299,22 @@ while done==False:
 			if send:
 				readSettings()
 				try:
-					sock.sendall(accelBuffer) # sometimes send accelerations
+					sockSpd.sendall(accelBuffer) # sometimes send accelerations
 				except:
-					print("Could not send accelerations.")
-					sock.close()
+					print("Could not send accelerations. Disconnected from port 10000.")
+					sockSpd.close()
 					sockConnected=False
 				else:
 					send=0
 					print('Accelerations sent.')
+	elif sockConnected:
+		print("Disconnected from port 10000.")
+		sockSpd.close()
+		sockConnected=False
 
-	# ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
-	
-	# Go ahead and update the screen with what we've drawn.
-	pygame.display.flip()
-	
-	# Limit to 20 frames per second
-	clock.tick(20)
-		
-# Close the window and quit.
-# If you forget this line, the program will 'hang'
-# on exit if running from IDLE.
-sock.close()
+	pygame.display.flip() # update numbers on pygame window
+	clock.tick(20) # Limit to 20 frames per second
+
+sockSpd.close()
 serStop()
 pygame.quit()
