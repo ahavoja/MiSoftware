@@ -98,23 +98,27 @@ ikkuna=Tk()
 ikkuna.title("Asetukset")
 #ikkuna.geometry('250x120')
 valikko=Menu(ikkuna)
-valinta=Menu(valikko,tearoff=0)
-valikko.add_cascade(label='Profiili',menu=valinta)
-valinta.add_command(label='Hidas')
-valinta.add_command(label='Nopea')
-valinta.add_command(label='Turbo')
+#valinta=Menu(valikko,tearoff=0)
+#valikko.add_cascade(label='Profiili',menu=valinta)
+#valinta.add_command(label='Hidas')
+#valinta.add_command(label='Nopea')
+#valinta.add_command(label='Turbo')
 ikkuna.config(menu=valikko)
-lbl=Label(ikkuna,text='Lähetystapa:')
-lbl.grid(column=0,row=0)
-radVal=IntVar()
-radVal.set(1)
-rad1=Radiobutton(ikkuna,text='Ei mikään',value=1,variable=radVal)
-rad2=Radiobutton(ikkuna,text='USB',value=2,variable=radVal)
-rad3=Radiobutton(ikkuna,text=IP,value=3,variable=radVal)
-rad1.grid(column=1,row=0)
-rad2.grid(column=2,row=0)
-rad3.grid(column=3,row=0)
-
+Label(ikkuna,text='Mode:').grid(column=0,row=0)
+mode=IntVar()
+mode.set(1)
+Radiobutton(ikkuna,text='To crane',value=1,variable=mode).grid(column=1,row=0)
+Radiobutton(ikkuna,text='To relay',value=2,variable=mode).grid(column=2,row=0)
+Radiobutton(ikkuna,text="I'm relay",value=3,variable=mode).grid(column=3,row=0)
+Label(ikkuna,text='Output:').grid(column=0,row=1)
+output=IntVar()
+output.set(1)
+Radiobutton(ikkuna,text='Off',value=1,variable=output).grid(column=1,row=1)
+USBbutton=Radiobutton(ikkuna,text='USB',value=2,variable=output)
+USBbutton.grid(column=2,row=1)
+Radiobutton(ikkuna,text=IP,value=3,variable=output).grid(column=3,row=1)
+IPlabel=Label(ikkuna)
+IPlabel.grid(columnspan=4)
 
 def monitorUSB(fan): # prints whatever arduino sends us
 	while True:
@@ -128,7 +132,7 @@ def monitorTCP():
 		sockPos.connect((IP,10001))
 	except:
 		print("Failed to connect to IP {} port 10001.".format(IP))
-		radVal.set(1)
+		output.set(1)
 	else:
 		print("Connected to IP {} port 10001.".format(IP))
 		while sockConnected:
@@ -180,6 +184,8 @@ sockPos.settimeout(2)
 # -------- Main Program Loop -----------
 done = False #Loop until the user clicks the close button.
 while done==False:
+	myIP=socket.gethostbyname(socket.gethostname())
+	IPlabel.config(text='IP of this computer is '+myIP)
 	ikkuna.update()
 
 	# DRAWING STEP
@@ -209,6 +215,13 @@ while done==False:
 			if event.key == pygame.K_u:
 				send=1
 
+	if mode.get()==2:
+		USBbutton.config(state=DISABLED)
+		if output.get()==2:
+			output.set(1)
+	else:
+		USBbutton.config(state='normal')
+
 	# keyboard control
 	keys=pygame.key.get_pressed()
 	if not keys[pygame.K_SPACE]:
@@ -224,17 +237,14 @@ while done==False:
 			hook=hookSpeed
 		elif keys[pygame.K_z]:
 			hook=-hookSpeed
-	
+
 	textPrint.print(screen,"{} {} {}".format(slew,trolley,hook))
-	if settings&0b100:
-		textPrint.print(screen,'lights on')
-	
 	struct.pack_into('>B',buffer,0,settings)
 	struct.pack_into('>BB',buffer,1,(slew&0x3FFF)>>7,slew&0x7F)
 	struct.pack_into('>BB',buffer,3,(trolley&0x3FFF)>>7,trolley&0x7F)
 	struct.pack_into('>BB',buffer,5,(hook&0x3FFF)>>7,hook&0x7F)
-	
-	if radVal.get()==2: # send via USB
+
+	if output.get()==2: # send via USB
 		if ser is None: # auto select arduino COM port
 			if cat is None:
 				now=time.time()
@@ -274,13 +284,13 @@ while done==False:
 					print('Accelerations sent.')
 	else:
 		serStop()
-	if radVal.get()==3: # send via TCP
+	if output.get()==3: # send via TCP
 		if not sockConnected:
 			try:
 				sockSpd.connect((IP,10000))
 			except:
 				print("Failed to connect to IP {} port 10000.".format(IP))
-				radVal.set(1)
+				output.set(1)
 			else:
 				print("Connected to IP {} port 10000.".format(IP))
 				sockConnected=True
@@ -312,6 +322,10 @@ while done==False:
 		sockSpd.close()
 		sockConnected=False
 
+	if settings&0b1000:
+		textPrint.print(screen,'silent mode')
+	if settings&0b100:
+		textPrint.print(screen,'lights on')
 	pygame.display.flip() # update numbers on pygame window
 	clock.tick(20) # Limit to 20 frames per second
 
