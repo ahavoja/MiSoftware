@@ -12,24 +12,15 @@ import time
 import socket
 from tkinter import * 
 
-buffer=bytearray(7)
+spdBuffer=bytearray(7)
 accelBuffer=bytearray(7)
+SECS=bytearray('S000000000ECS','ascii')
 settings=0b10100000
 IP="0.0.0.0"
-slewAccel=4
-trolAccel=2
-hookAccel=2
-slewSpeed=20
-trolSpeed=10
-hookSpeed=10
+slewAccel,trolAccel,hookAccel=4,2,2
+slewSpeed,trolSpeed,hookSpeed=20,10,10
 def readSettings():
-	global IP
-	global slewAccel
-	global trolAccel
-	global hookAccel
-	global slewSpeed
-	global trolSpeed
-	global hookSpeed
+	global IP,slewAccel,trolAccel,hookAccel,slewSpeed,trolSpeed,hookSpeed
 	try:
 		with open("settings.txt") as f:
 			pass
@@ -85,14 +76,18 @@ ser=None
 cat=None
 say=False
 def serStop():
-	global ser
-	global cat
-	global say
+	global ser,cat,say
 	if ser is not None:
 		ser.close()
 	ser=None
 	cat=None
 	say=False
+def mode2():
+	USBbutton.config(state=DISABLED)
+	if output.get()==2:
+		output.set(1)
+	global slew,trol,hook
+	slew,trol,hook=0,0,0
 
 ikkuna=Tk()
 ikkuna.title("Asetukset")
@@ -108,7 +103,7 @@ Label(ikkuna,text='Mode:').grid(column=0,row=0)
 mode=IntVar()
 mode.set(1)
 Radiobutton(ikkuna,text='To crane',value=1,variable=mode).grid(column=1,row=0)
-Radiobutton(ikkuna,text='To relay',value=2,variable=mode).grid(column=2,row=0)
+Radiobutton(ikkuna,text='To relay',value=2,variable=mode,command=mode2).grid(column=2,row=0)
 Radiobutton(ikkuna,text="I'm relay",value=3,variable=mode).grid(column=3,row=0)
 Label(ikkuna,text='Output:').grid(column=0,row=1)
 output=IntVar()
@@ -171,10 +166,7 @@ screen = pygame.display.set_mode([250, 100]) # screen size [width,height]
 pygame.display.set_caption("keyboard")
 clock = pygame.time.Clock() # Used to manage how fast the screen updates
 textPrint = TextPrint() # Get ready to print
-
-old=0
-wax=0
-
+slew,trol,hook,old,wax=0,0,0,0,0
 sockSpd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sockSpd.settimeout(2)
 sockConnected=False
@@ -193,57 +185,76 @@ while done==False:
 	# above this, or they will be erased with this command.
 	screen.fill(BLACK)
 	textPrint.reset()
-
-	slew=0
-	trolley=0
-	hook=0
 	send=0
 
 	# EVENT PROCESSING STEP
 	for event in pygame.event.get(): # User did something
 		if event.type == pygame.QUIT: # If user clicked close
 			done=True # Flag that we are done so we exit this loop
-		if event.type == pygame.KEYDOWN:
-			if event.key == pygame.K_s:
-				settings ^= 0b1000
-			if event.key == pygame.K_h:
-				settings |= 0b10000 # home
+		if event.type == pygame.KEYDOWN: # single key presses
 			if event.key == pygame.K_SPACE:
 				settings &= ~0b100000 # stop
-			if event.key == pygame.K_l:
-				settings ^= 0b100 # lights on/off
-			if event.key == pygame.K_u:
-				send=1
+				slew,trol,hook=0,0,0
+			if mode.get()==1:
+				if event.key == pygame.K_s:
+					settings ^= 0b1000
+				if event.key == pygame.K_h:
+					settings |= 0b10000 # home
+				if event.key == pygame.K_l:
+					settings ^= 0b100 # lights on/off
+				if event.key == pygame.K_u:
+					send=1
+			elif mode.get()==2:
+				if event.key == pygame.K_LEFT and slew<6:
+					slew+=1
+				if event.key == pygame.K_RIGHT and slew>-6:
+					slew-=1
+				if event.key == pygame.K_UP and trol>-6:
+					trol-=1
+				if event.key == pygame.K_DOWN and trol<6:
+					trol+=1
+				if event.key == pygame.K_a and hook<6:
+					hook+=1
+				if event.key == pygame.K_z and hook>-6:
+					hook-=1
 
 	if mode.get()==2:
-		USBbutton.config(state=DISABLED)
-		if output.get()==2:
-			output.set(1)
+		if slew>0:
+			struct.pack_into('>BB',SECS,1,slew+48,48)
+		else:
+			struct.pack_into('>BB',SECS,1,48,slew+48)
+		if trol>0:
+			struct.pack_into('>BB',SECS,3,48,trol+48)
+		else:
+			struct.pack_into('>BB',SECS,3,trol+48,48)
+		if hook>0:
+			struct.pack_into('>BB',SECS,5,hook+48,48)
+		else:
+			struct.pack_into('>BB',SECS,5,48,hook+48)
 	else:
 		USBbutton.config(state='normal')
+		# press and hold keyboard control
+		slew,trol,hook=0,0,0
+		keys=pygame.key.get_pressed()
+		if not keys[pygame.K_SPACE]:
+			if keys[pygame.K_LEFT]:
+				slew=slewSpeed # motor steps per second
+			elif keys[pygame.K_RIGHT]:
+				slew=-slewSpeed
+			if keys[pygame.K_UP]:
+				trol=-trolSpeed
+			elif keys[pygame.K_DOWN]:
+				trol=trolSpeed
+			if keys[pygame.K_a]:
+				hook=hookSpeed
+			elif keys[pygame.K_z]:
+				hook=-hookSpeed
+		struct.pack_into('>B',spdBuffer,0,settings)
+		struct.pack_into('>BB',spdBuffer,1,(slew&0x3FFF)>>7,slew&0x7F)
+		struct.pack_into('>BB',spdBuffer,3,(trol&0x3FFF)>>7,trol&0x7F)
+		struct.pack_into('>BB',spdBuffer,5,(hook&0x3FFF)>>7,hook&0x7F)
 
-	# keyboard control
-	keys=pygame.key.get_pressed()
-	if not keys[pygame.K_SPACE]:
-		if keys[pygame.K_LEFT]:
-			slew=slewSpeed # motor steps per second
-		elif keys[pygame.K_RIGHT]:
-			slew=-slewSpeed
-		if keys[pygame.K_UP]:
-			trolley=-trolSpeed
-		elif keys[pygame.K_DOWN]:
-			trolley=trolSpeed
-		if keys[pygame.K_a]:
-			hook=hookSpeed
-		elif keys[pygame.K_z]:
-			hook=-hookSpeed 
-	textPrint.print(screen,"{} {} {}".format(slew,trolley,hook))
-	
-	if mode==1:
-		struct.pack_into('>B',buffer,0,settings)
-		struct.pack_into('>BB',buffer,1,(slew&0x3FFF)>>7,slew&0x7F)
-		struct.pack_into('>BB',buffer,3,(trolley&0x3FFF)>>7,trolley&0x7F)
-		struct.pack_into('>BB',buffer,5,(hook&0x3FFF)>>7,hook&0x7F)
+	textPrint.print(screen,"{} {} {}".format(slew,trol,hook))
 
 	if output.get()==2: # send via USB
 		if ser is None: # auto select arduino COM port
@@ -267,7 +278,7 @@ while done==False:
 					threading.Thread(target=monitorUSB, args=(ser,)).start()
 		else: # send data to arduino
 			try:
-				ser.write(buffer) # send speeds
+				ser.write(spdBuffer) # send speeds
 			except:
 				serStop()
 			else:
@@ -298,7 +309,10 @@ while done==False:
 				threading.Thread(target=monitorTCP).start()
 		else:
 			try:
-				sockSpd.sendall(buffer) # send speeds to Arduino
+				if mode.get()==2:
+					sockSpd.sendall(SECS) # send command to relay PC
+				else:
+					sockSpd.sendall(spdBuffer) # send speeds to Arduino
 			except:
 				print("Could not send speeds. Disconnected from port 10000.")
 				sockSpd.close()
