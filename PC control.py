@@ -63,13 +63,8 @@ def readSettings():
 				trolSpeed=int(x[11:])
 			if x[:11]=="speed_hook=":
 				hookSpeed=int(x[11:])
-		print('Speeds:  {}  {}  {}'.format(slewSpeed,trolSpeed,hookSpeed))
 	finally:
 		f.close()
-	struct.pack_into('>B',accelBuffer,0,settings|0b1000000)
-	struct.pack_into('>BB',accelBuffer,1,(slewAccel&0x3FFF)>>7,slewAccel&0x7F)
-	struct.pack_into('>BB',accelBuffer,3,(trolAccel&0x3FFF)>>7,trolAccel&0x7F)
-	struct.pack_into('>BB',accelBuffer,5,(hookAccel&0x3FFF)>>7,hookAccel&0x7F)
 readSettings()
 
 ser=None
@@ -333,6 +328,7 @@ while done==False:
 	if output.get()==3: # send via TCP
 		if not sockConnected:
 			try:
+				readSettings()
 				sockSpd.connect((IP,10000))
 			except:
 				print("Failed to connect to IP {} port 10000.".format(IP))
@@ -357,6 +353,11 @@ while done==False:
 				textPrint.print(screen,"TCP on")
 			if send:
 				readSettings()
+				print('Speeds:  {}  {}  {}'.format(slewSpeed,trolSpeed,hookSpeed))
+				struct.pack_into('>B',accelBuffer,0,settings|0b1000000)
+				struct.pack_into('>BB',accelBuffer,1,(slewAccel&0x3FFF)>>7,slewAccel&0x7F)
+				struct.pack_into('>BB',accelBuffer,3,(trolAccel&0x3FFF)>>7,trolAccel&0x7F)
+				struct.pack_into('>BB',accelBuffer,5,(hookAccel&0x3FFF)>>7,hookAccel&0x7F)
 				try:
 					sockSpd.sendall(accelBuffer) # sometimes send accelerations
 				except:
