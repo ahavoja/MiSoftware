@@ -160,6 +160,7 @@ def serverThread():
 			print("Server started on IP {} port 10000.".format(myIP))
 			serverStarted=True
 	if serverWanted:
+		print("Waiting for connection...")
 		conn,clientIP=sockSer.accept()
 		print("Connection from {}.".format(clientIP))
 		data=conn.recv(16)
