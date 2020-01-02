@@ -328,8 +328,8 @@ while done==False:
 		serStop()
 	if output.get()==3: # send via TCP
 		if not sockConnected:
+			readSettings()
 			try:
-				readSettings()
 				sockSpd.connect((IP,10000))
 			except:
 				print("Failed to connect to IP {} port 10000.".format(IP))
