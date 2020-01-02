@@ -236,13 +236,14 @@ while done==False:
 		if keys[pygame.K_a]:
 			hook=hookSpeed
 		elif keys[pygame.K_z]:
-			hook=-hookSpeed
-
+			hook=-hookSpeed 
 	textPrint.print(screen,"{} {} {}".format(slew,trolley,hook))
-	struct.pack_into('>B',buffer,0,settings)
-	struct.pack_into('>BB',buffer,1,(slew&0x3FFF)>>7,slew&0x7F)
-	struct.pack_into('>BB',buffer,3,(trolley&0x3FFF)>>7,trolley&0x7F)
-	struct.pack_into('>BB',buffer,5,(hook&0x3FFF)>>7,hook&0x7F)
+	
+	if mode==1:
+		struct.pack_into('>B',buffer,0,settings)
+		struct.pack_into('>BB',buffer,1,(slew&0x3FFF)>>7,slew&0x7F)
+		struct.pack_into('>BB',buffer,3,(trolley&0x3FFF)>>7,trolley&0x7F)
+		struct.pack_into('>BB',buffer,5,(hook&0x3FFF)>>7,hook&0x7F)
 
 	if output.get()==2: # send via USB
 		if ser is None: # auto select arduino COM port
