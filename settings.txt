@@ -1,4 +1,4 @@
-IP_address=192.168.10.43
+IP_address=192.168.10.64
 
 #Acceleration in units of 10 steps/(s^2). Range 0 to 16000.
 accel_slew=100

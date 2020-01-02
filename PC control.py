@@ -82,12 +82,21 @@ def serStop():
 	ser=None
 	cat=None
 	say=False
+def mode1():
+	global serverWanted
+	serverWanted=False
 def mode2():
+	global serverWanted
+	serverWanted=False
 	USBbutton.config(state=DISABLED)
 	if output.get()==2:
 		output.set(1)
 	global slew,trol,hook
 	slew,trol,hook=0,0,0
+def mode3():
+	global serverWanted
+	serverWanted=True
+	threading.Thread(target=serverThread).start()
 
 ikkuna=Tk()
 ikkuna.title("Asetukset")
@@ -102,9 +111,9 @@ ikkuna.config(menu=valikko)
 Label(ikkuna,text='Mode:').grid(column=0,row=0)
 mode=IntVar()
 mode.set(1)
-Radiobutton(ikkuna,text='To crane',value=1,variable=mode).grid(column=1,row=0)
+Radiobutton(ikkuna,text='To crane',value=1,variable=mode,command=mode1).grid(column=1,row=0)
 Radiobutton(ikkuna,text='To relay',value=2,variable=mode,command=mode2).grid(column=2,row=0)
-Radiobutton(ikkuna,text="I'm relay",value=3,variable=mode).grid(column=3,row=0)
+Radiobutton(ikkuna,text="I'm relay",value=3,variable=mode,command=mode3).grid(column=3,row=0)
 Label(ikkuna,text='Output:').grid(column=0,row=1)
 output=IntVar()
 output.set(1)
@@ -139,6 +148,36 @@ def monitorTCP():
 		sockPos.close()
 		print("Disconnected from port 10001.")
 
+serverStarted=False
+serverWanted=False
+def serverThread():
+	global serverStarted,serverWanted
+	if not serverStarted:
+		hostname=socket.gethostname()
+		try:
+			sockSer.bind((hostname,10000))
+			sockSer.listen(1)
+		except:
+			print("Failed to start server.")
+			output.set(1)
+		else:
+			myIP=socket.gethostbyname(hostname)
+			print("Server started on IP {} port 10000.".format(myIP))
+			serverStarted=True
+	if serverWanted:
+		conn,clientIP=sockSer.accept()
+		print("Connection from {}.".format(clientIP))
+		data=conn.recv(16)
+		print("Received: {}.".format(data))
+		conn.close()
+
+sockSpd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sockSpd.settimeout(2)
+sockConnected=False
+sockPos = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sockPos.settimeout(2)
+sockSer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
 # Define some colors
 BLACK=(0,0,0)
 WHITE=(255,255,255)
@@ -167,11 +206,6 @@ pygame.display.set_caption("keyboard")
 clock = pygame.time.Clock() # Used to manage how fast the screen updates
 textPrint = TextPrint() # Get ready to print
 slew,trol,hook,old,wax=0,0,0,0,0
-sockSpd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sockSpd.settimeout(2)
-sockConnected=False
-sockPos = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sockPos.settimeout(2)
 
 # -------- Main Program Loop -----------
 done = False #Loop until the user clicks the close button.
@@ -345,5 +379,6 @@ while done==False:
 	clock.tick(20) # Limit to 20 frames per second
 
 sockSpd.close()
+sockSer.close()
 serStop()
 pygame.quit()
