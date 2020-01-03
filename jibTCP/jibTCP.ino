@@ -1,10 +1,7 @@
 // This code reads commands from serial port (USB wire) or W5500 ethernet shield and controls 3 stepper motors via TMC2130 drivers.
 // This code runs on atmega 328p microcontroller (Arduino Uno or Nano)
 /* todo:
- * adjust and lock homing speeds
- * receive commands through TCP
  * jerk limit?
- * make trolley slow down instead of instantly stopping before edges to limit sway
  * adjust sg_stall_value based on input voltage
  * POWER & TORQUE:
 	 * adjust setCurrent, power_down_delay, microsteps etc.
@@ -65,7 +62,7 @@ volatile bool motOn[3]={0,0,0}; // which motors are spinning
 volatile bool dir[3]={0,0,0}; // slew, trolley, hook direction
 volatile long
 	pos[3]={0,0,0}, // motor step positions
-	posMax=2E9, posMin=-2E9, posTop=2E9;
+	posMax=4000, posMin=-4000, posTop=30000;
 volatile byte homing=0, homeSlew=0, homeTrolley=0;
 int spd[3]={0,0,0}, goal[3]={0,0,0};
 bool ethernetConnected=0, ethernetBegun=0, serialActive=1, receptionActive=1, light=0, silent, hookHitGround;

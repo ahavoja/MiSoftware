@@ -67,6 +67,13 @@ def readSettings():
 		f.close()
 readSettings()
 
+def packAccels():
+	print('Speeds:  {}  {}  {}'.format(slewSpeed,trolSpeed,hookSpeed))
+	struct.pack_into('>B',accelBuffer,0,settings|0b1000000)
+	struct.pack_into('>BB',accelBuffer,1,(slewAccel&0x3FFF)>>7,slewAccel&0x7F)
+	struct.pack_into('>BB',accelBuffer,3,(trolAccel&0x3FFF)>>7,trolAccel&0x7F)
+	struct.pack_into('>BB',accelBuffer,5,(hookAccel&0x3FFF)>>7,hookAccel&0x7F)
+
 ser=None
 cat=None
 say=False
@@ -131,7 +138,7 @@ def monitorTCP():
 		sockPos.connect((IP,10001))
 	except:
 		print("Failed to connect to IP {} port 10001.".format(IP))
-		output.set(1)
+		#output.set(1)
 	else:
 		print("Connected to IP {} port 10001.".format(IP))
 		while sockConnected:
@@ -318,6 +325,7 @@ while done==False:
 				textPrint.print(screen,"USB on")
 			if send:
 				readSettings()
+				packAccels()
 				try:
 					ser.write(accelBuffer) # sometimes send accelerations
 				except:
@@ -356,11 +364,7 @@ while done==False:
 				textPrint.print(screen,"TCP on")
 			if send:
 				readSettings()
-				print('Speeds:  {}  {}  {}'.format(slewSpeed,trolSpeed,hookSpeed))
-				struct.pack_into('>B',accelBuffer,0,settings|0b1000000)
-				struct.pack_into('>BB',accelBuffer,1,(slewAccel&0x3FFF)>>7,slewAccel&0x7F)
-				struct.pack_into('>BB',accelBuffer,3,(trolAccel&0x3FFF)>>7,trolAccel&0x7F)
-				struct.pack_into('>BB',accelBuffer,5,(hookAccel&0x3FFF)>>7,hookAccel&0x7F)
+				packAccels()
 				try:
 					sockSpd.sendall(accelBuffer) # sometimes send accelerations
 				except:

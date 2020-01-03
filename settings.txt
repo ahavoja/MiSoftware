@@ -2,10 +2,10 @@ IP_address=192.168.10.61
 
 #Acceleration in units of 10 steps/(s^2). Range 0 to 16000.
 accel_slew=100
-accel_trol=200
-accel_hook=50
+accel_trol=100
+accel_hook=200
 
 #Speed in units of steps/s. Range 0 to 8000.
 speed_slew=2400
-speed_trol=600
-speed_hook=200
+speed_trol=1000
+speed_hook=1000
