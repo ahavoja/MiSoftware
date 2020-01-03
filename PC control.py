@@ -166,6 +166,7 @@ def serverThread():
 		data=conn.recv(16)
 		print("Received: {}.".format(data))
 		conn.close()
+	print("Server stopped.")
 
 sockSpd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sockSpd.settimeout(2)
@@ -348,6 +349,7 @@ while done==False:
 				print("Could not send speeds. Disconnected from port 10000.")
 				sockSpd.close()
 				sockConnected=False
+				output.set(1)
 			else:
 				settings |= 0b100000 # stop stopping
 				settings &= ~0b10000 # stop homing
@@ -365,6 +367,7 @@ while done==False:
 					print("Could not send accelerations. Disconnected from port 10000.")
 					sockSpd.close()
 					sockConnected=False
+					output.set(1)
 				else:
 					send=0
 					print('Accelerations sent.')
