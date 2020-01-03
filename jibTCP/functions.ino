@@ -210,10 +210,10 @@ void readAccels(){
 	word accel;
 	for(byte i=0; i<3; i++){
 		EEPROM.get(4+i*2,accel);
-		acceleration[i]=accel/100.;
+		acceleration[i]=accel/1000.;
 		if(homing==0){
 			Serial.print("  ");
-			Serial.print(accel); // in units of 10 steps/(s^2)
+			Serial.print(accel); // in units of steps/(s^2)
 		}
 	}
 	if(homing==0) Serial.println();

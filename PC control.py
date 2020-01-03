@@ -17,7 +17,7 @@ accelBuffer=bytearray(7)
 SECS=bytearray('S000000000ECS','ascii')
 settings=0b10100000
 IP="0.0.0.0"
-slewAccel,trolAccel,hookAccel=4,2,2
+slewAccel,trolAccel,hookAccel=40,20,20
 slewSpeed,trolSpeed,hookSpeed=20,10,10
 def readSettings():
 	global IP,slewAccel,trolAccel,hookAccel,slewSpeed,trolSpeed,hookSpeed
@@ -31,10 +31,10 @@ def readSettings():
 			print('Could not create settings.txt file.')
 		else:
 			f.write('IP_address=192.168.10.21\n\n')
-			f.write('#Acceleration in units of 10 steps/(s^2). Range 0 to 16000.\n')
-			f.write('accel_slew=200\n')
-			f.write('accel_trol=100\n')
-			f.write('accel_hook=100\n\n')
+			f.write('#Acceleration in units of steps/(s^2). Range 0 to 16000.\n')
+			f.write('accel_slew=2000\n')
+			f.write('accel_trol=1000\n')
+			f.write('accel_hook=1000\n\n')
 			f.write('#Speed in units of steps/s. Range 0 to 8000.\n')
 			f.write('speed_slew=2000\n')
 			f.write('speed_trol=500\n')
