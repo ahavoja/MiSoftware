@@ -14,7 +14,6 @@ from tkinter import *
 
 spdBuffer=bytearray(7)
 accelBuffer=bytearray(7)
-SECS=bytearray('S000000000ECS','ascii')
 settings=0b10100000
 IP="0.0.0.0"
 slewAccel,trolAccel,hookAccel=40,20,20
@@ -35,10 +34,10 @@ def readSettings():
 			f.write('accel_slew=2000\n')
 			f.write('accel_trol=1000\n')
 			f.write('accel_hook=1000\n\n')
-			f.write('#Speed in units of steps/s. Range 0 to 8000.\n')
-			f.write('speed_slew=2000\n')
-			f.write('speed_trol=500\n')
-			f.write('speed_hook=500')
+			f.write('#Speeds in units of steps/s. Range 0 to 8000.\n')
+			f.write('speed_slew=200,400,800,1600,3200,6400\n')
+			f.write('speed_trol=100,200,400,800,1600,3200\n')
+			f.write('speed_hook=25,50,100,200,400,800')
 			print('settings.txt file created.')
 		finally:
 			f.close()
@@ -58,11 +57,14 @@ def readSettings():
 			if x[:11]=="accel_hook=":
 				hookAccel=int(x[11:])
 			if x[:11]=="speed_slew=":
-				slewSpeed=int(x[11:])
+				slewSpeed=[int(v) for v in x[11:].split(',')]
+				slewSpeed.insert(0,0)
 			if x[:11]=="speed_trol=":
-				trolSpeed=int(x[11:])
+				trolSpeed=[int(v) for v in x[11:].split(',')]
+				trolSpeed.insert(0,0)
 			if x[:11]=="speed_hook=":
-				hookSpeed=int(x[11:])
+				hookSpeed=[int(v) for v in x[11:].split(',')]
+				hookSpeed.insert(0,0)
 	finally:
 		f.close()
 readSettings()
@@ -85,20 +87,12 @@ def serStop():
 	cat=None
 	say=False
 def mode1():
-	global serverWanted
-	serverWanted=False
+	pass
 def mode2():
-	global serverWanted
-	serverWanted=False
-	USBbutton.config(state=DISABLED)
-	if output.get()==2:
-		output.set(1)
 	global slew,trol,hook
 	slew,trol,hook=0,0,0
 def mode3():
-	global serverWanted
-	serverWanted=True
-	threading.Thread(target=serverThread).start()
+	pass
 
 ikkuna=Tk()
 ikkuna.title("Asetukset")
@@ -113,9 +107,9 @@ ikkuna.config(menu=valikko)
 Label(ikkuna,text='Mode:').grid(column=0,row=0)
 mode=IntVar()
 mode.set(1)
-Radiobutton(ikkuna,text='To crane',value=1,variable=mode,command=mode1).grid(column=1,row=0)
-Radiobutton(ikkuna,text='To relay',value=2,variable=mode,command=mode2).grid(column=2,row=0)
-Radiobutton(ikkuna,text="I'm relay",value=3,variable=mode,command=mode3).grid(column=3,row=0)
+Radiobutton(ikkuna,text='Max speed',value=1,variable=mode,command=mode1).grid(column=1,row=0)
+Radiobutton(ikkuna,text='Adjustable',value=2,variable=mode,command=mode2).grid(column=2,row=0)
+Radiobutton(ikkuna,text='DualShock',value=3,variable=mode,command=mode3).grid(column=3,row=0)
 Label(ikkuna,text='Output:').grid(column=0,row=1)
 output=IntVar()
 output.set(1)
@@ -150,37 +144,11 @@ def monitorTCP():
 		sockPos.close()
 		print("Disconnected from port 10001.")
 
-serverStarted=False
-serverWanted=False
-def serverThread():
-	global serverStarted,serverWanted
-	if not serverStarted:
-		hostname=socket.gethostname()
-		try:
-			sockSer.bind((hostname,10000))
-			sockSer.listen(1)
-		except:
-			print("Failed to start server.")
-			output.set(1)
-		else:
-			myIP=socket.gethostbyname(hostname)
-			print("Server started on IP {} port 10000.".format(myIP))
-			serverStarted=True
-	if serverWanted:
-		print("Waiting for connection...")
-		conn,clientIP=sockSer.accept()
-		print("Connection from {}.".format(clientIP))
-		data=conn.recv(16)
-		print("Received: {}.".format(data))
-		conn.close()
-	print("Server stopped.")
-
 sockSpd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sockSpd.settimeout(2)
 sockConnected=False
 sockPos = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sockPos.settimeout(2)
-sockSer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Define some colors
 BLACK=(0,0,0)
@@ -209,7 +177,7 @@ screen = pygame.display.set_mode([250, 100]) # screen size [width,height]
 pygame.display.set_caption("keyboard")
 clock = pygame.time.Clock() # Used to manage how fast the screen updates
 textPrint = TextPrint() # Get ready to print
-slew,trol,hook,old,wax=0,0,0,0,0
+slew,trol,hook,slewGear,trolGear,hookGear,old,wax=0,0,0,0,0,0,0,0
 
 # -------- Main Program Loop -----------
 done = False #Loop until the user clicks the close button.
@@ -230,67 +198,66 @@ while done==False:
 		if event.type == pygame.QUIT: # If user clicked close
 			done=True # Flag that we are done so we exit this loop
 		if event.type == pygame.KEYDOWN: # single key presses
+			if event.key == pygame.K_s:
+				settings ^= 0b1000
+			if event.key == pygame.K_h:
+				settings |= 0b10000 # home
+			if event.key == pygame.K_l:
+				settings ^= 0b100 # lights on/off
+			if event.key == pygame.K_u:
+				send=1
 			if event.key == pygame.K_SPACE:
 				settings &= ~0b100000 # stop
 				slew,trol,hook=0,0,0
-			if mode.get()==1:
-				if event.key == pygame.K_s:
-					settings ^= 0b1000
-				if event.key == pygame.K_h:
-					settings |= 0b10000 # home
-				if event.key == pygame.K_l:
-					settings ^= 0b100 # lights on/off
-				if event.key == pygame.K_u:
-					send=1
-			elif mode.get()==2:
-				if event.key == pygame.K_LEFT and slew<6:
-					slew+=1
-				if event.key == pygame.K_RIGHT and slew>-6:
-					slew-=1
-				if event.key == pygame.K_UP and trol>-6:
-					trol-=1
-				if event.key == pygame.K_DOWN and trol<6:
-					trol+=1
-				if event.key == pygame.K_a and hook<6:
-					hook+=1
-				if event.key == pygame.K_z and hook>-6:
-					hook-=1
+				slewGear,trolGear,hookGear=0,0,0
+			if mode.get()==2:
+				limit=len(slewSpeed)-1
+				if event.key == pygame.K_LEFT and slewGear<limit:
+					slewGear+=1
+				if event.key == pygame.K_RIGHT and slewGear>-limit:
+					slewGear-=1
+				limit=len(trolSpeed)-1
+				if event.key == pygame.K_UP and trolGear>-limit:
+					trolGear-=1
+				if event.key == pygame.K_DOWN and trolGear<limit:
+					trolGear+=1
+				limit=len(hookSpeed)-1
+				if event.key == pygame.K_a and hookGear<limit:
+					hookGear+=1
+				if event.key == pygame.K_z and hookGear>-limit:
+					hookGear-=1
+				slew=slewSpeed[abs(slewGear)]
+				trol=trolSpeed[abs(trolGear)]
+				hook=hookSpeed[abs(hookGear)]
+				if slewGear<0:
+					slew=-slew
+				if trolGear<0:
+					trol=-trol
+				if hookGear<0:
+					hook=-hook
 
-	if mode.get()==2:
-		if slew>0:
-			struct.pack_into('>BB',SECS,1,slew+48,48)
-		else:
-			struct.pack_into('>BB',SECS,1,48,slew+48)
-		if trol>0:
-			struct.pack_into('>BB',SECS,3,48,trol+48)
-		else:
-			struct.pack_into('>BB',SECS,3,trol+48,48)
-		if hook>0:
-			struct.pack_into('>BB',SECS,5,hook+48,48)
-		else:
-			struct.pack_into('>BB',SECS,5,48,hook+48)
-	else:
+	if mode.get()==1:
 		USBbutton.config(state='normal')
 		# press and hold keyboard control
 		slew,trol,hook=0,0,0
 		keys=pygame.key.get_pressed()
 		if not keys[pygame.K_SPACE]:
 			if keys[pygame.K_LEFT]:
-				slew=slewSpeed # motor steps per second
+				slew=slewSpeed[-1] # motor steps per second
 			elif keys[pygame.K_RIGHT]:
-				slew=-slewSpeed
+				slew=-slewSpeed[-1]
 			if keys[pygame.K_UP]:
-				trol=-trolSpeed
+				trol=-trolSpeed[-1]
 			elif keys[pygame.K_DOWN]:
-				trol=trolSpeed
+				trol=trolSpeed[-1]
 			if keys[pygame.K_a]:
-				hook=hookSpeed
+				hook=hookSpeed[-1]
 			elif keys[pygame.K_z]:
-				hook=-hookSpeed
-		struct.pack_into('>B',spdBuffer,0,settings)
-		struct.pack_into('>BB',spdBuffer,1,(slew&0x3FFF)>>7,slew&0x7F)
-		struct.pack_into('>BB',spdBuffer,3,(trol&0x3FFF)>>7,trol&0x7F)
-		struct.pack_into('>BB',spdBuffer,5,(hook&0x3FFF)>>7,hook&0x7F)
+				hook=-hookSpeed[-1]
+	struct.pack_into('>B',spdBuffer,0,settings)
+	struct.pack_into('>BB',spdBuffer,1,(slew&0x3FFF)>>7,slew&0x7F)
+	struct.pack_into('>BB',spdBuffer,3,(trol&0x3FFF)>>7,trol&0x7F)
+	struct.pack_into('>BB',spdBuffer,5,(hook&0x3FFF)>>7,hook&0x7F)
 
 	textPrint.print(screen,"{} {} {}".format(slew,trol,hook))
 
@@ -349,10 +316,7 @@ while done==False:
 				threading.Thread(target=monitorTCP).start()
 		else:
 			try:
-				if mode.get()==2:
-					sockSpd.sendall(SECS) # send command to relay PC
-				else:
-					sockSpd.sendall(spdBuffer) # send speeds to Arduino
+				sockSpd.sendall(spdBuffer) # send speeds to Arduino
 			except:
 				print("Could not send speeds. Disconnected from port 10000.")
 				sockSpd.close()
@@ -388,6 +352,5 @@ while done==False:
 	clock.tick(20) # Limit to 20 frames per second
 
 sockSpd.close()
-sockSer.close()
 serStop()
 pygame.quit()
