@@ -21,11 +21,11 @@ void loop() {
 	static bool newDir1=0;
 	if(spd[1]>0){
 		newDir1=1;
-		spd[1]=min(100*sqrt(posMax-posTrolley)+10,spd[1]);
+		spd[1]=min(decelerationTrol*sqrt(posMax-posTrolley)+3,spd[1]);
 	}
 	else if(spd[1]<0){
 		newDir1=0;
-		spd[1]=-min(100*sqrt(posTrolley-posMin)+10,-spd[1]);
+		spd[1]=-min(decelerationTrol*sqrt(posTrolley-posMin)+3,-spd[1]);
 	}
 	if(newDir1!=dir[1]){
 		trolley.shaft_dir(newDir1);
@@ -46,7 +46,7 @@ void loop() {
 	static bool newDir2=0;
 	if(spd[2]>0){
 		newDir2=1;
-		spd[2]=min(100*sqrt(posTop-posHook)+10,spd[2]);
+		spd[2]=min(decelerationHook*sqrt(posTop-posHook)+3,spd[2]);
 	}
 	else if(spd[2]<0) newDir2=0;
 	if(newDir2!=dir[2]){

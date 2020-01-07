@@ -216,6 +216,8 @@ void readAccels(){
 			Serial.print(accel); // in units of steps/(s^2)
 		}
 	}
+	decelerationTrol=sqrt(2000*acceleration[1]);
+	decelerationHook=sqrt(2000*acceleration[2]);
 	if(homing==0) Serial.println();
 }
 

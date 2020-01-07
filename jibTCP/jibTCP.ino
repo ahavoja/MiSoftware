@@ -70,4 +70,5 @@ String message;
 unsigned long now; // current time in loop()
 unsigned long timeReceived=0; // when was last byte received via USB or Ethernet
 float acceleration[3]; // stores slew, trolley, hook acceleration limits
+float decelerationTrol,decelerationHook; // how quick to decelerate before trolley hits edges
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
