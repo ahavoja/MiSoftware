@@ -18,8 +18,9 @@ settings=0b10100000
 IP="0.0.0.0"
 slewAccel,trolAccel,hookAccel=40,20,20
 slewSpeed,trolSpeed,hookSpeed=20,10,10
+slewSpeedPad,trolSpeedPad,hookSpeedPad=20,10,10
 def readSettings():
-	global IP,slewAccel,trolAccel,hookAccel,slewSpeed,trolSpeed,hookSpeed
+	global IP,slewAccel,trolAccel,hookAccel,slewSpeed,trolSpeed,hookSpeed,slewSpeedPad,trolSpeedPad,hookSpeedPad
 	try:
 		with open("settings.txt") as f:
 			pass
@@ -31,13 +32,16 @@ def readSettings():
 		else:
 			f.write('IP_address=192.168.10.21\n\n')
 			f.write('#Acceleration in units of steps/(s^2). Range 0 to 16000.\n')
-			f.write('accel_slew=2000\n')
-			f.write('accel_trol=1000\n')
-			f.write('accel_hook=1000\n\n')
+			f.write('accel_slew=500\n')
+			f.write('accel_trol=500\n')
+			f.write('accel_hook=500\n\n')
 			f.write('#Speeds in units of steps/s. Range 0 to 8000.\n')
-			f.write('speed_slew=200,400,800,1600,3200,6400\n')
-			f.write('speed_trol=100,200,400,800,1600,3200\n')
-			f.write('speed_hook=25,50,100,200,400,800')
+			f.write('speed_slew=50,100,200,400,800,1600,3200,6400\n')
+			f.write('speed_trol=25,50,100,200,400,800,1600,3200\n')
+			f.write('speed_hook=25,50,100,200,400,800\n')
+			f.write('speed_slew_pad=1000\n')
+			f.write('speed_trol_pad=500\n')
+			f.write('speed_hook_pad=300')
 			print('settings.txt file created.')
 		finally:
 			f.close()
@@ -65,6 +69,12 @@ def readSettings():
 			if x[:11]=="speed_hook=":
 				hookSpeed=[int(v) for v in x[11:].split(',')]
 				hookSpeed.insert(0,0)
+			if x[:15]=="speed_slew_pad=":
+				slewSpeedPad=int(x[15:])
+			if x[:15]=="speed_trol_pad=":
+				trolSpeedPad=int(x[15:])
+			if x[:15]=="speed_hook_pad=":
+				hookSpeedPad=int(x[15:])
 	finally:
 		f.close()
 readSettings()
@@ -158,7 +168,7 @@ WHITE=(255,255,255)
 class TextPrint:
 	def __init__(self):
 		self.reset()
-		self.font = pygame.font.SysFont('Consolas', 18, bold=False, italic=False)
+		self.font = pygame.font.SysFont('Consolas', 14, bold=False, italic=False)
 	def print(self, screen, textString):
 		textBitmap = self.font.render(textString, True, WHITE)
 		screen.blit(textBitmap, [self.x, self.y])
@@ -173,11 +183,36 @@ class TextPrint:
 		self.x -= 20
 
 pygame.init()
-screen = pygame.display.set_mode([250, 100]) # screen size [width,height]
+screen = pygame.display.set_mode([300, 500]) # screen size [width,height]
 pygame.display.set_caption("keyboard")
 clock = pygame.time.Clock() # Used to manage how fast the screen updates
+pygame.joystick.init()
 textPrint = TextPrint() # Get ready to print
-slew,trol,hook,slewGear,trolGear,hookGear,old,wax=0,0,0,0,0,0,0,0
+slew=trol=hook=slewGear=trolGear=hookGear=old=wax=0
+padMode=False
+
+def deadzone(wolf): # calculates deadzones for DualShock4
+	zone=0.1
+	if wolf>=zone:
+		return (wolf-zone)/(1-zone)
+	elif wolf<=-zone:
+		return (wolf+zone)/(1-zone)
+	else: # we are in deadzone
+		return 0 # means don't move
+
+padState={0:{},1:{},2:{},3:{}} # nested dictionary to hold button states of each pad
+def btnPress(btn): # returns 1 when button becomes pressed
+	global padState
+	newBtn=pad.get_button(btn)
+	try: # check if key is created yet
+		oldBtn=padState[i][btn]
+	except:
+		return 0
+	finally:
+		padState[i][btn]=newBtn
+	if newBtn>oldBtn:
+		return 1
+	return 0
 
 # -------- Main Program Loop -----------
 done = False #Loop until the user clicks the close button.
@@ -191,7 +226,79 @@ while done==False:
 	# above this, or they will be erased with this command.
 	screen.fill(BLACK)
 	textPrint.reset()
+	joystick_count = pygame.joystick.get_count()
+	textPrint.print(screen,"Number of joysticks: {}".format(joystick_count))
 	send=0
+	stopping=False
+	if mode.get()!=2:
+		slew=trol=hook=0
+
+	# For each pad:
+	for i in range(joystick_count):
+		pad = pygame.joystick.Joystick(i)
+		pad.init()
+		textPrint.print(screen, "Joystick {} : {}".format(i,pad.get_name()) )
+		textPrint.indent()
+		
+		# Usually axis run in pairs, up/down for one, and left/right for
+		# the other.
+		axes = pad.get_numaxes()
+		textPrint.print(screen, "Number of axes: {}".format(axes) )
+		textPrint.indent()
+		
+		show=False
+		for j in range( axes ):
+			if pad.get_axis(j) != 0:
+				show=True
+		if show:
+			for j in range( axes ):
+				textPrint.print(screen, "Axis {} : {:>6.3f}".format(j, pad.get_axis(j)) )
+		textPrint.unindent()
+				
+		buttons = pad.get_numbuttons()
+		textPrint.print(screen, "Number of buttons: {}".format(buttons) )
+		textPrint.indent()
+
+		for j in range( buttons ):
+			button = pad.get_button( j )
+			if button == 1:
+				textPrint.print(screen, "Button {:>2}".format(j) )
+		textPrint.unindent()
+		textPrint.unindent()
+
+		if btnPress(1): # silent mode
+			print('Pad silent.')
+			settings ^= 0b1000
+		if btnPress(2): # lights
+			settings ^= 0b100
+			print('Pad lights {}.'.format('on' if settings&0b100 else 'off'))
+		if btnPress(8): # home
+			print('Pad homing.')
+			settings |= 0b10000		
+		if btnPress(9): # switch joystick modes
+			print('Pad mode {}.'.format(padMode))
+			padMode = not padMode
+		if pad.get_button(13): # stop motors
+			settings &= ~0b100000
+			slew=trol=hook=slew0=trol0=hook0=0
+			stopping=True
+		elif stopping==False and mode.get()==3:
+			faster=False
+			if pad.get_button(4) or pad.get_button(5):
+				faster=True
+			trol0=int(deadzone(pad.get_axis(1))*(trolSpeed[-1] if faster else trolSpeedPad))
+			if padMode:
+				slew0=int(-deadzone(pad.get_axis(0))*(slewSpeed[-1] if faster else slewSpeedPad))
+				hook0=int(deadzone(pad.get_axis(3))*(hookSpeed[-1] if faster else hookSpeedPad))
+			else:
+				slew0=int((pad.get_axis(5)-pad.get_axis(4))*((slewSpeed[-1] if faster else slewSpeedPad)/2+0.01))
+				hook0=int(-deadzone(pad.get_axis(3))*(hookSpeed[-1] if faster else hookSpeedPad))
+			if slew0!=0:
+				slew=slew0
+			if trol0!=0:
+				trol=trol0
+			if hook0!=0:
+				hook=hook0
 
 	# EVENT PROCESSING STEP
 	for event in pygame.event.get(): # User did something
@@ -208,8 +315,7 @@ while done==False:
 				send=1
 			if event.key == pygame.K_SPACE:
 				settings &= ~0b100000 # stop
-				slew,trol,hook=0,0,0
-				slewGear,trolGear,hookGear=0,0,0
+				slewGear=trolGear=hookGear=0
 			if mode.get()==2:
 				limit=len(slewSpeed)-1
 				if event.key == pygame.K_LEFT and slewGear<limit:
@@ -236,14 +342,13 @@ while done==False:
 				if hookGear<0:
 					hook=-hook
 
-	if mode.get()==1:
-		USBbutton.config(state='normal')
-		# press and hold keyboard control
-		slew,trol,hook=0,0,0
+	if mode.get()!=2: # press and hold keyboard control
 		keys=pygame.key.get_pressed()
-		if not keys[pygame.K_SPACE]:
+		if keys[pygame.K_SPACE]:
+			slew=trol=hook=0
+		else:
 			if keys[pygame.K_LEFT]:
-				slew=slewSpeed[-1] # motor steps per second
+				slew=slewSpeed[-1]
 			elif keys[pygame.K_RIGHT]:
 				slew=-slewSpeed[-1]
 			if keys[pygame.K_UP]:
