@@ -1,6 +1,5 @@
 // This code reads commands from serial port (USB wire) or W5500 ethernet shield and controls 3 stepper motors via TMC2130 drivers.
 // This code runs on atmega 328p microcontroller (Arduino Uno or Nano)
-// Server IP 192.168.10.50, port 3232
 /* todo:
  * jerk limit?
  * adjust sg_stall_value based on input voltage
@@ -50,10 +49,7 @@ Adafruit_NeoPixel led(23, A4, NEO_GRB + NEO_KHZ800); // led count, led pin
 #include <EEPROM.h> // for storing unique IP address for each arduino
 
 #include <Ethernet.h>
-EthernetServer server(10000); // port for controlling motor movement
-EthernetServer serverLoc(10001); // port for reading motor positions
 EthernetClient client;
-EthernetClient clientLoc;
 
 // global variables
 volatile unsigned long
