@@ -1,5 +1,6 @@
 // This code reads commands from serial port (USB wire) or W5500 ethernet shield and controls 3 stepper motors via TMC2130 drivers.
 // This code runs on atmega 328p microcontroller (Arduino Uno or Nano)
+// Server IP 192.168.10.50, port 3232
 /* todo:
  * jerk limit?
  * adjust sg_stall_value based on input voltage
