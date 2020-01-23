@@ -65,18 +65,6 @@ void loop() {
 			ethernetConnected=0;
 			Serial.println(F("Ethernet cable unplugged"));
 		}
-		if(!client.connected()){
-			static unsigned long connTime=now;
-			if(now-connTime>200){
-				connTime=now;
-				//Serial.println(F("Connecting to 192.168.10.50"));
-				const byte serverIP[]={192,168,10,50};
-				if(client.connect(serverIP,3232)){
-					Serial.write('C'); // connected
-					client.print(1);
-				}else Serial.write('F'); // failed to connect
-			}
-		}
 	}
 	else if(!serialActive && Ethernet.linkStatus()==LinkON){
 		if(ethernetBegun==0){
@@ -97,8 +85,35 @@ void loop() {
 		}
 	}
 	if(ethernetConnected){
-		// receive commands from PC through Ethernet
-		if(client.available()){
+		static unsigned long sendTime=now;
+		if(now-sendTime>200){
+			sendTime=now;
+			if(!client.connected()){
+				const byte serverIP[]={192,168,10,50};
+				if(client.connect(serverIP,3232)) Serial.write('C'); // connected
+				else Serial.write('F'); // failed to connect
+			}
+			if(client.connected()){ // Send motor positions to PC
+				long positron[3];
+				for(byte i=0; i<3; i++){ // copy motor positions to buffer
+					cli();
+					positron[i]=pos[i];
+					sei();
+				}
+				//float beef = positron[0]/200.0/(103/121+26)/53*9; // gear ratio for slew
+				//float beef = positron[0]*3.162075E-5; // slew in revolutions
+				float beef = positron[0]*1.9867909E-4; // slew in radians
+				message = String(beef,3);
+				message += ';';
+				beef = 668-positron[1]*0.2; // trolley position from tower centerline mm
+				message += String(beef,0);
+				message += ';';
+				beef = positron[2]*0.337075; // hook position from trolley bottom mm
+				message += String(beef,0);
+				client.print(message+"\n");
+			}
+		}
+		if(client.connected() && client.available()){ // receive commands from PC through Ethernet
 			byte in=client.read();
 			interpretByte(in);
 		}

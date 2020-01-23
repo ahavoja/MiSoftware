@@ -274,25 +274,6 @@ void interpretByte(const byte wax){
 		}else if(job==5){
 			newSpeed |= wax;
 			goal[2]=newSpeed;
-			// Send motor positions to PC
-			long positron[3];
-			for(byte i=0; i<3; i++){ // copy motor positions to buffer
-				cli();
-				positron[i]=pos[i];
-				sei();
-			}
-			//float beef = positron[0]/200.0/(103/121+26)/53*9; // gear ratio for slew
-			//float beef = positron[0]*3.162075E-5; // slew in revolutions
-			float beef = positron[0]*1.9867909E-4; // slew in radians
-			message = String(beef,3);
-			message += ';';
-			beef = 668-positron[1]*0.2; // trolley position from tower centerline mm
-			message += String(beef,0);
-			message += ';';
-			beef = positron[2]*0.337075; // hook position from trolley bottom mm
-			message += String(beef,0);
-			client.print(message+"\n");
-			//client.stop();
 		}
 		++job;
 	}
