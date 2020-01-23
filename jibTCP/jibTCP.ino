@@ -32,7 +32,7 @@
 // At 24 V input voltage, slewing motor can spin max 7700 steps/second before stalling.
 
 // a motor can never spin too fast, right?
-//#pragma GCC optimize ("-O2") // https://www.instructables.com/id/Arduino-IDE-16x-compiler-optimisations-faster-code/
+#pragma GCC optimize ("-O2") // https://www.instructables.com/id/Arduino-IDE-16x-compiler-optimisations-faster-code/
 
 // This code uses libraries. These can be easily installed through Arduino IDE library manager by pressing CTRL + SHIFT + I
 #include <TMC2130Stepper.h> // https://github.com/teemuatlut/TMC2130Stepper
