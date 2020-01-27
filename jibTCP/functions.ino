@@ -267,7 +267,7 @@ void interpretByte(const byte wax){
 			if(wax & 0b01000000) newSpeed |= 0b1100000000000000;
 		}else if(job==3){
 			newSpeed |= wax;
-			goal[1]=newSpeed;
+			goal[1]=-newSpeed;
 		}else if(job==4){
 			newSpeed=wax<<7;
 			if(wax & 0b01000000) newSpeed |= 0b1100000000000000;
@@ -314,11 +314,11 @@ void setup() {
 
 	// Ethernet stuff
 	Ethernet.init(10); // Ethernet shield CS pin
-	//EEPROM.update(0,10); // you can use this line to update unique IP address
-	const byte myIP=EEPROM.read(0);
-	if(myIP==171) led.updateLength(47); // because jib number one has more leds
-	mac[5]=myIP; // unique MAC
-	//IPAddress ip(192,168,EEPROM.read(1),myIP); // 192.168.0.171
+	//EEPROM.update(0,2); // you can use this line to update crane ID
+	myID=EEPROM.read(0);
+	if(myID==1) led.updateLength(47); // because jib number one has more leds
+	mac[5]=myID; // unique MAC
+	//IPAddress ip(192,168,EEPROM.read(1),myID); // 192.168.0.171
 	//Ethernet.begin(mac, ip);
 }
 

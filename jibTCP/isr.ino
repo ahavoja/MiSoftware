@@ -10,7 +10,7 @@ ISR(TIMER1_CAPT_vect){ // http://www.gammon.com.au/interrupts
 				homeSlew=2;
 			}else if(homeSlew==2 && box<512){
 				homeSlew=3;
-				pos[0]=0;
+				pos[0]=1700; // set zero position here
 			}
 		}
 		if(dir[0]) ++pos[0];

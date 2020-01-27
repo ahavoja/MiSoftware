@@ -32,7 +32,7 @@
 // At 24 V input voltage, slewing motor can spin max 7700 steps/second before stalling.
 
 // a motor can never spin too fast, right?
-#pragma GCC optimize ("-O2") // https://www.instructables.com/id/Arduino-IDE-16x-compiler-optimisations-faster-code/
+//#pragma GCC optimize ("-O2") // https://www.instructables.com/id/Arduino-IDE-16x-compiler-optimisations-faster-code/
 
 // This code uses libraries. These can be easily installed through Arduino IDE library manager by pressing CTRL + SHIFT + I
 #include <TMC2130Stepper.h> // https://github.com/teemuatlut/TMC2130Stepper
@@ -68,4 +68,10 @@ unsigned long now; // current time in loop()
 unsigned long timeReceived=0; // when was last byte received via USB or Ethernet
 float acceleration[3]; // stores slew, trolley, hook acceleration limits
 float decelerationTrol,decelerationHook; // how quick to decelerate before trolley hits edges
+byte myID; // crane number
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+const int myHeight[]={1481,1181,581,881}; // hook height from ground mm
+const byte scale=50; // real crane size relative to scale model
+const float siteLat=60.224553, siteLon=24.790838; // site center point coordinates
+const int cranePosX[]={-450,350,433,-430}; // crane coordinates relative to minisite center mm
+const int cranePosY[]={600,600,-597,594};

@@ -324,10 +324,10 @@ while done==False:
 				if event.key == pygame.K_RIGHT and slewGear>-limit:
 					slewGear-=1
 				limit=len(trolSpeed)-1
-				if event.key == pygame.K_UP and trolGear>-limit:
-					trolGear-=1
-				if event.key == pygame.K_DOWN and trolGear<limit:
+				if event.key == pygame.K_UP and trolGear<limit:
 					trolGear+=1
+				if event.key == pygame.K_DOWN and trolGear>-limit:
+					trolGear-=1
 				limit=len(hookSpeed)-1
 				if event.key == pygame.K_a and hookGear<limit:
 					hookGear+=1
@@ -353,9 +353,9 @@ while done==False:
 			elif keys[pygame.K_RIGHT]:
 				slew=-slewSpeed[-1]
 			if keys[pygame.K_UP]:
-				trol=-trolSpeed[-1]
-			elif keys[pygame.K_DOWN]:
 				trol=trolSpeed[-1]
+			elif keys[pygame.K_DOWN]:
+				trol=-trolSpeed[-1]
 			if keys[pygame.K_a]:
 				hook=hookSpeed[-1]
 			elif keys[pygame.K_z]:

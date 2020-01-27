@@ -102,21 +102,28 @@ void loop() {
 				}
 				//float beef = positron[0]/200.0/(103/121+26)/53*9; // gear ratio for slew
 				//float beef = positron[0]*3.162075E-5; // slew in revolutions
-				float beef = positron[0]*1.9867909E-4; // slew in radians
-				message = String(beef,3);
+				const float slewRad = positron[0]*1.9867909E-4; // slew in radians
+				message = String(slewRad,3);
 				message += ';';
-				beef = 668-positron[1]*0.2; // trolley position from tower centerline mm
-				message += String(beef,0);
+				const float trolleyMm = 668-positron[1]*0.2; // trolley position from tower centerline mm
+				message += String(trolleyMm,0);
 				message += ';';
-				beef = positron[2]*0.337075; // hook position from trolley bottom mm
-				message += String(beef,0);
+				const float hookTop = positron[2]*0.338; // hook position from trolley bottom mm
+				message += String(hookTop,0);
+				message += '|';
+				const float latitude = (sin(slewRad)*trolleyMm+cranePosY[myID-1])*scale*8.9753638E-9 +siteLat; // latitude in degrees
+				message += String(latitude,6);
+				message += ';';
+				const float longitude = (cos(slewRad)*trolleyMm+cranePosX[myID-1])*scale*1.8043564E-8 +siteLon; // longitude in degrees
+				message += String(longitude,6);
+				message += ';';
+				const float hookBottom = (myHeight[myID-1]+hookTop)*scale*0.001; // hook distance from ground m
+				message += String(hookBottom,1);
 				client.print(message+"\n");
 			}
 		}
-		if(client.connected() && client.available()){ // receive commands from PC through Ethernet
-			byte in=client.read();
-			interpretByte(in);
-		}
+		// receive commands from PC through Ethernet
+		if(client.connected() && client.available()) interpretByte(client.read());
 	}
 
 	// receive commands from PC through USB
