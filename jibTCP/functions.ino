@@ -7,7 +7,7 @@ void settings(){ // this function changes some settings of TMC2130
 	slew.power_down_delay(30); // how long to wait after movement stops before reducing to hold current 0-255 = 0-4 seconds
 	slew.hold_delay(3); // 0-15 how gradually it reduces to hold current. 0=fast change. 15=slow change.
 	slew.stealthChop(1); // Enable extremely quiet stepping
-	slew.standstill_mode(2);
+	slew.standstill_mode(2); // 2 means coil shorted if I_HOLD=0, 1 means freewheeling, 0 means normal operation
 	slew.stealth_autoscale(1);
 	slew.microsteps(0); // we dont want any
 	slew.interpolate(1); // automatic 256 x microstepping
@@ -18,7 +18,7 @@ void settings(){ // this function changes some settings of TMC2130
 	trolley.begin();
 	trolley.high_sense_R(1);
 	trolley.hold_current(1);
-	trolley.run_current(8);
+	trolley.run_current(16);
 	trolley.power_down_delay(30);
 	trolley.hold_delay(3);
 	trolley.stealthChop(1);
@@ -29,7 +29,7 @@ void settings(){ // this function changes some settings of TMC2130
 	trolley.double_edge_step(1);
 	trolley.chopper_mode(0);
 	trolley.diag1_stall(1);
-	trolley.sg_stall_value(15);
+	trolley.sg_stall_value(10);
 
 	// hoisting driver settings
 	hook.begin();
@@ -52,7 +52,7 @@ void settings(){ // this function changes some settings of TMC2130
 void silentMode(){
 	silent=1;
 	Serial.println(F("Silent mode"));
-	slew.stealth_max_speed(30); // switch stealthChop off if motor spins fast enough (meaning if time between two steps is less than this)
+	slew.stealth_max_speed(50); // switch stealthChop off if motor spins fast enough (meaning if time between two steps is less than this)
 	trolley.stealth_max_speed(10); // todo find how small this can be
 	hook.stealth_max_speed(10);
 	trolley.coolstep_min_speed(0); // set to zero so that it can run silently at higher speeds too
