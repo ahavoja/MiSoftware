@@ -68,9 +68,9 @@ void loop() {
 	}
 	else if(!serialActive && Ethernet.linkStatus()==LinkON){
 		if(ethernetBegun==0){
-			Serial.println(F("Connecting DHCP..."));
-			if(Ethernet.begin(mac)) ethernetBegun=1;
-			else Serial.println(F("DHCP fail"));
+			Serial.println(F("Connecting..."));
+			Ethernet.begin(mac,myIP);
+			ethernetBegun=1;
 		}
 		if(ethernetBegun){
 			ethernetConnected=1;

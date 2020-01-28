@@ -314,12 +314,11 @@ void setup() {
 
 	// Ethernet stuff
 	Ethernet.init(10); // Ethernet shield CS pin
-	//EEPROM.update(0,2); // you can use this line to update crane ID
+	//EEPROM.update(0,4); // you can use this line to update crane ID
 	myID=EEPROM.read(0);
 	if(myID==1) led.updateLength(47); // because jib number one has more leds
 	mac[5]=myID; // unique MAC
-	//IPAddress ip(192,168,EEPROM.read(1),myID); // 192.168.0.171
-	//Ethernet.begin(mac, ip);
+	myIP[3]=100+myID;
 }
 
 /*EEPROM map:

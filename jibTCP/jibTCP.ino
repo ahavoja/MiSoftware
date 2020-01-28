@@ -70,6 +70,7 @@ float acceleration[3]; // stores slew, trolley, hook acceleration limits
 float decelerationTrol,decelerationHook; // how quick to decelerate before trolley hits edges
 byte myID; // crane number
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+byte myIP[]= {192,168,10,105};
 const int myHeight[]={1481,1181,581,881}; // hook height from ground mm
 const byte scale=50; // real crane size relative to scale model
 const float siteLat=60.224553, siteLon=24.790838; // site center point coordinates
