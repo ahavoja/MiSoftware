@@ -29,7 +29,7 @@ void settings(){ // this function changes some settings of TMC2130
 	trolley.double_edge_step(1);
 	trolley.chopper_mode(0);
 	trolley.diag1_stall(1);
-	trolley.sg_stall_value(10);
+	trolley.sg_stall_value(5);
 
 	// hoisting driver settings
 	hook.begin();

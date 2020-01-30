@@ -63,7 +63,7 @@ volatile long
 volatile byte homing=0, homeSlew=0, homeTrolley=0;
 int spd[3]={0,0,0}, goal[3]={0,0,0};
 bool ethernetConnected=0, ethernetBegun=0, serialActive=1, receptionActive=1, light=0, silent, hookHitGround;
-String message;
+String message, tempR;
 unsigned long now; // current time in loop()
 unsigned long timeReceived=0; // when was last byte received via USB or Ethernet
 float acceleration[3]; // stores slew, trolley, hook acceleration limits

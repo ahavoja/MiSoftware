@@ -40,7 +40,7 @@ void home(){
 		if(homeTrolley==2){
 			Serial.println(F("Edge detected"));
 			posMin=0;
-			pos[1]=-20; // stop before edge
+			pos[1]=-10; // stop before edge
 			posMax=0x7FFFFFFF;
 			delay(100); // vibration dampening time
 			goal[1]=600; // change direction
