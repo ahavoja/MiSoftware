@@ -75,4 +75,4 @@ const int myHeight[]={1481,1181,581,881}; // hook height from ground mm
 const byte scale=50; // real crane size relative to scale model
 const float siteLat=60.224553, siteLon=24.790838; // site center point coordinates
 const int cranePosX[]={-450,350,433,-430}; // crane coordinates relative to minisite center mm
-const int cranePosY[]={600,600,-597,594};
+const int cranePosY[]={600,600,-597,-594};

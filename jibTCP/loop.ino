@@ -112,10 +112,10 @@ void loop() {
 				message += String(hookTop,0);
 				message += '|';
 				const float latitude = (sin(slewRad)*trolleyMm+cranePosY[myID-1])*scale*8.9753638E-9 +siteLat; // latitude in degrees
-				message += String(latitude,6);
+				message += String(latitude,8);
 				message += ';';
 				const float longitude = (cos(slewRad)*trolleyMm+cranePosX[myID-1])*scale*1.8043564E-8 +siteLon; // longitude in degrees
-				message += String(longitude,6);
+				message += String(longitude,8);
 				message += ';';
 				const float hookBottom = (myHeight[myID-1]+hookTop)*scale*0.001; // hook distance from ground m
 				message += String(hookBottom,1);
