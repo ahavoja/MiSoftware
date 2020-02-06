@@ -63,7 +63,7 @@ volatile long
 volatile byte homing=0, homeSlew=0, homeTrolley=0;
 int spd[3]={0,0,0}, goal[3]={0,0,0};
 bool ethernetConnected=0, ethernetBegun=0, serialActive=1, receptionActive=1, light=0, silent, hookHitGround;
-String message, tempR;
+String message, globalR_str;
 unsigned long now; // current time in loop()
 unsigned long timeReceived=0; // when was last byte received via USB or Ethernet
 float acceleration[3]; // stores slew, trolley, hook acceleration limits
@@ -73,6 +73,6 @@ byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 byte myIP[]= {192,168,10,105};
 const int myHeight[]={1481,1181,581,881}; // hook height from ground mm
 const byte scale=50; // real crane size relative to scale model
-const float siteLat=60.224553, siteLon=24.790838; // site center point coordinates
+const float latSite=60.224553, lonSite=24.790838; // site center point coordinates
 const int cranePosX[]={-450,350,433,-430}; // crane coordinates relative to minisite center mm
 const int cranePosY[]={600,600,-597,-594};

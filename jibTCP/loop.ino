@@ -111,20 +111,11 @@ void loop() {
 				const float hookTop = positron[2]*0.338; // hook position from trolley bottom mm
 				message += String(hookTop,0);
 				message += '|';
-				const float latitude = (sin(slewRad)*trolleyMm+cranePosY[myID-1])*scale*8.9753638E-9; // latitude in degrees
-				message += String(latitude+siteLat,2);
-				float tempL=((int)(siteLat*100))/100.0;
-				tempR=String(latitude+(siteLat-tempL),8);
-				message += tempR.substring(tempR.indexOf('.')+3);
+				coordinates((sin(slewRad)*trolleyMm+cranePosY[myID-1])*scale*8.9753638E-9,latSite);
 				message += ';';
-				const float longitude = (cos(slewRad)*trolleyMm+cranePosX[myID-1])*scale*1.8043564E-8; // longitude in degrees
-				message += String(longitude+siteLon,2);
-				tempL=((int)(siteLon*100))/100.0;
-				tempR=String(longitude+(siteLon-tempL),8);
-				message += tempR.substring(tempR.indexOf('.')+3);
+				coordinates((cos(slewRad)*trolleyMm+cranePosX[myID-1])*scale*1.8043564E-8,lonSite);
 				message += ';';
-				const float hookBottom = (myHeight[myID-1]+hookTop)*scale*0.001; // hook distance from ground m
-				message += String(hookBottom,1);
+				message += String((myHeight[myID-1]+hookTop)*scale*0.001,1); // hook distance from ground m
 				client.print(message+"\n");
 			}
 		}

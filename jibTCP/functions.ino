@@ -298,6 +298,25 @@ void interpretByte(const byte wax){
 	}
 }
 
+void coordinates(const float local, const float site){
+	float globalL=((int)(site*100))/100.0;
+	float globalR=(site-globalL)+local;
+	if(local+site<0){
+		message+='-';
+		if(globalR>0){
+			globalL+=0.01;
+			globalR-=0.01;
+		}
+	}
+	else if(globalR<0){
+		globalL-=0.01;
+		globalR+=0.01;
+	}
+	message+=String(fabsf(globalL),2);
+	globalR_str=String(globalR,8);
+	message+=globalR_str.substring(globalR_str.indexOf('.')+3);
+}
+
 void setup() {
 	DDRD |= 0b01110000; // step pins outputs
 	Serial.begin(250000); // Set baud rate in serial monitor
