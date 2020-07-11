@@ -123,10 +123,9 @@ Radiobutton(ikkuna,text='Adjustable',value=2,variable=mode,command=mode2).grid(c
 Radiobutton(ikkuna,text='DualShock',value=3,variable=mode,command=mode3).grid(column=3,row=0)
 Label(ikkuna,text='Output:').grid(column=0,row=1)
 output=IntVar()
-output.set(1)
+output.set(2)
 Radiobutton(ikkuna,text='Off',value=1,variable=output).grid(column=1,row=1)
-USBbutton=Radiobutton(ikkuna,text='USB',value=2,variable=output)
-USBbutton.grid(column=2,row=1)
+Radiobutton(ikkuna,text='USB',value=2,variable=output).grid(column=2,row=1)
 Radiobutton(ikkuna,text=IP,value=3,variable=output).grid(column=3,row=1)
 IPlabel=Label(ikkuna)
 IPlabel.grid(columnspan=4)
@@ -349,17 +348,17 @@ while done==False:
 			slew=trol=hook=0
 		else:
 			if keys[pygame.K_LEFT]:
-				slew=slewSpeed[-1]
+				slew=slewSpeedPad
 			elif keys[pygame.K_RIGHT]:
-				slew=-slewSpeed[-1]
+				slew=-slewSpeedPad
 			if keys[pygame.K_UP]:
-				trol=trolSpeed[-1]
+				trol=trolSpeedPad
 			elif keys[pygame.K_DOWN]:
-				trol=-trolSpeed[-1]
+				trol=-trolSpeedPad
 			if keys[pygame.K_a]:
-				hook=hookSpeed[-1]
+				hook=hookSpeedPad
 			elif keys[pygame.K_z]:
-				hook=-hookSpeed[-1]
+				hook=-hookSpeedPad
 	struct.pack_into('>B',spdBuffer,0,settings)
 	struct.pack_into('>BB',spdBuffer,1,(slew&0x3FFF)>>7,slew&0x7F)
 	struct.pack_into('>BB',spdBuffer,3,(trol&0x3FFF)>>7,trol&0x7F)
